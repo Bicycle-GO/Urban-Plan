@@ -1,0 +1,1519 @@
+const STORAGE_KEY = "urban-plan-exam-study-v1";
+
+const subjects = [
+  {
+    id: "planning",
+    title: "도시계획론",
+    exam: "필기 1과목",
+    overview:
+      "도시계획의 개념, 도시화, 계획이론, 조사분석, 도시기본계획과 도시관리계획의 틀을 잡는 과목입니다.",
+    tags: ["계획이론", "생활권", "토지이용", "도시조사"],
+    lectures: [
+      {
+        title: "도시계획의 성격",
+        points: [
+          "도시문제 해결과 미래 공간질서 형성을 위한 공공적 의사결정 과정",
+          "종합성, 장기성, 공공성, 실현가능성을 함께 판단",
+          "도시기본계획은 장기 종합계획, 도시관리계획은 집행계획으로 정리",
+        ],
+      },
+      {
+        title: "도시화와 도시구조",
+        points: [
+          "집중, 교외화, 재도시화 흐름을 도시문제와 연결",
+          "동심원, 선형, 다핵 구조 모형의 전제와 한계를 비교",
+          "생활권은 규모와 기능 단계별로 근린, 지구, 도시권으로 해석",
+        ],
+      },
+      {
+        title: "조사분석과 계획지표",
+        points: [
+          "인구, 산업, 토지이용, 교통, 환경 자료를 계획목표와 연결",
+          "계획인구는 추세연장, 사회적 증가, 수용능력 검토를 함께 사용",
+          "지표는 현황 설명이 아니라 대안 비교의 근거로 활용",
+        ],
+      },
+      {
+        title: "토지이용계획",
+        points: [
+          "주거, 상업, 공업, 녹지, 기반시설의 상충과 보완 관계를 파악",
+          "혼합용도, 압축도시, TOD는 교통과 토지이용의 결합으로 이해",
+          "계획도는 색채보다 배치 논리와 면적표의 정합성이 중요",
+        ],
+      },
+    ],
+    terms: [
+      ["도시기본계획", "장기 발전방향과 공간구조를 제시하는 종합계획"],
+      ["도시관리계획", "용도지역, 기반시설, 도시개발사업 등 집행을 위한 계획"],
+      ["생활권", "일상생활 서비스 이용권을 기준으로 나눈 계획 단위"],
+      ["TOD", "대중교통 결절점을 중심으로 고밀 복합개발을 유도하는 방식"],
+    ],
+  },
+  {
+    id: "design",
+    title: "도시설계 및 단지계획",
+    exam: "필기 2과목",
+    overview:
+      "가로, 블록, 경관, 주거단지, 공공공간을 실제 공간으로 구성하는 방법을 다룹니다.",
+    tags: ["가로망", "근린주구", "경관", "주거단지"],
+    lectures: [
+      {
+        title: "근린주구와 주거단지",
+        points: [
+          "초등학교와 생활편익시설을 보행권 중심에 배치하는 개념을 이해",
+          "간선도로는 주거단지 내부를 관통하지 않도록 경계부에 두는 원칙",
+          "주거밀도, 오픈스페이스, 주차, 보행동선을 함께 검토",
+        ],
+      },
+      {
+        title: "가로와 블록",
+        points: [
+          "위계는 간선, 보조간선, 집산, 국지도로로 기능을 구분",
+          "보행친화 도시는 짧은 블록, 접지부 활성, 안전한 횡단이 핵심",
+          "격자형, 방사환상형, 쿨데삭의 장단점을 비교",
+        ],
+      },
+      {
+        title: "경관과 공공공간",
+        points: [
+          "조망축, 랜드마크, 스카이라인, 녹지축을 도면에 명확히 표현",
+          "공원녹지는 잔여지가 아니라 생활권 접근성과 생태축으로 계획",
+          "CPTED는 자연감시, 접근통제, 영역성, 유지관리로 정리",
+        ],
+      },
+      {
+        title: "단지계획 실무",
+        points: [
+          "대지 조건, 법적 기준, 동선, 시설 배치를 순서대로 결정",
+          "학교, 공원, 커뮤니티 시설은 이용권과 안전한 보행로로 연결",
+          "도면에는 방위, 축척, 범례, 면적표, 계획 의도가 빠지지 않아야 함",
+        ],
+      },
+    ],
+    terms: [
+      ["근린주구", "초등학교와 생활편익시설을 중심으로 한 주거계획 단위"],
+      ["가로 위계", "교통 처리 기능에 따라 도로를 단계적으로 조직하는 방식"],
+      ["CPTED", "범죄예방 환경설계. 자연감시와 영역성 확보가 핵심"],
+      ["오픈스페이스", "공원, 광장, 녹지처럼 공공적 활동과 환경 기능을 갖는 공간"],
+    ],
+  },
+  {
+    id: "development",
+    title: "도시개발론",
+    exam: "필기 3과목",
+    overview:
+      "개발사업 방식, 환지와 수용, 정비사업, 사업성, 공공성과 민간참여 구조를 공부합니다.",
+    tags: ["환지", "수용", "정비사업", "사업성"],
+    lectures: [
+      {
+        title: "도시개발사업의 구조",
+        points: [
+          "사업 목적, 시행자, 시행방식, 토지확보, 비용부담 구조를 세트로 정리",
+          "환지방식은 토지소유권을 이전하지 않고 재배치와 감보로 비용을 부담",
+          "수용 또는 사용방식은 공공성, 보상, 사업 속도와 연결",
+        ],
+      },
+      {
+        title: "정비사업",
+        points: [
+          "주거환경개선, 재개발, 재건축의 대상과 시행 구조를 구분",
+          "권리관계, 이주대책, 기반시설 확보가 빈출 포인트",
+          "사업 추진 단계는 기본계획, 구역지정, 조합, 사업시행, 관리처분 흐름",
+        ],
+      },
+      {
+        title: "개발경제와 사업성",
+        points: [
+          "총사업비, 분양수입, 공공기여, 금융비용, 리스크를 함께 판단",
+          "NPV, IRR, B/C는 투자 판단의 기본 지표",
+          "공공개발은 수익성만이 아니라 형평성과 장기 편익을 반영",
+        ],
+      },
+      {
+        title: "개발관리",
+        points: [
+          "난개발 방지는 기반시설 연동과 성장관리의 관점에서 접근",
+          "개발권양도제, 기반시설부담, 공공기여의 목적을 비교",
+          "민관협력은 역할 배분과 위험 배분 구조가 쟁점",
+        ],
+      },
+    ],
+    terms: [
+      ["환지", "종전 토지 대신 사업 후 토지를 다시 배분하는 방식"],
+      ["감보", "공공시설 용지와 사업비 충당을 위해 토지 면적을 줄이는 것"],
+      ["관리처분계획", "정비사업에서 권리와 분양, 비용부담을 정하는 계획"],
+      ["B/C", "편익을 비용으로 나눈 경제성 판단 지표"],
+    ],
+  },
+  {
+    id: "regional",
+    title: "국토 및 지역계획",
+    exam: "필기 4과목",
+    overview:
+      "국토계획 체계, 지역경제, 입지론, 성장거점, 광역권, 균형발전 정책을 연결합니다.",
+    tags: ["국토계획", "입지론", "균형발전", "광역권"],
+    lectures: [
+      {
+        title: "국토계획 체계",
+        points: [
+          "상위계획과 하위계획의 위계, 정합성, 환류를 함께 기억",
+          "국토종합계획은 장기 국토공간 방향을 제시",
+          "도시권과 광역권은 행정구역보다 기능적 연계를 기준으로 판단",
+        ],
+      },
+      {
+        title: "입지론과 공간경제",
+        points: [
+          "베버의 공업입지론은 수송비, 노동비, 집적경제를 중심으로 정리",
+          "크리스탈러 중심지이론은 재화 공급과 배후지 계층 구조가 핵심",
+          "뢰쉬, 튀넨, 호이트 모형은 전제와 적용 범위를 같이 비교",
+        ],
+      },
+      {
+        title: "지역개발이론",
+        points: [
+          "성장거점, 누적적 인과, 내생적 발전, 클러스터를 구분",
+          "불균형 성장 전략은 파급효과와 역류효과를 함께 검토",
+          "균형발전 정책은 접근성, 산업기반, 삶의 질 지표로 평가",
+        ],
+      },
+      {
+        title: "광역교통과 인프라",
+        points: [
+          "통근권, 생활권, 물류권 자료로 광역 계획의 범위를 잡음",
+          "철도역, 터미널, 환승센터는 토지이용계획과 결합해 판단",
+          "환경축과 재해위험도는 개발 가능지 선별의 제한 조건",
+        ],
+      },
+    ],
+    terms: [
+      ["중심지이론", "재화와 서비스 공급 중심지가 계층적으로 배치된다는 이론"],
+      ["성장거점", "특정 거점 개발을 통해 주변 지역으로 파급을 기대하는 전략"],
+      ["집적경제", "기업과 활동이 모여 비용 절감과 생산성 향상을 얻는 효과"],
+      ["광역권", "통근, 산업, 서비스 이용 등 기능적 연계가 강한 권역"],
+    ],
+  },
+  {
+    id: "law",
+    title: "도시계획관계법규",
+    exam: "필기 5과목",
+    overview:
+      "국토계획법을 중심으로 도시개발, 정비, 주택, 건축, 보상 관련 법 체계를 정리합니다.",
+    tags: ["국토계획법", "용도지역", "기반시설", "개발행위"],
+    lectures: [
+      {
+        title: "국토계획법 체계",
+        points: [
+          "광역도시계획, 도시기본계획, 도시관리계획의 위계를 구분",
+          "용도지역, 용도지구, 용도구역은 지정 목적과 제한 내용이 다름",
+          "도시계획시설과 기반시설의 개념 차이를 확인",
+        ],
+      },
+      {
+        title: "용도지역과 개발행위",
+        points: [
+          "건폐율, 용적률, 행위제한은 지역별 숫자보다 체계 이해가 먼저",
+          "개발행위허가는 토지형질변경, 건축, 공작물 설치 등을 관리",
+          "성장관리계획은 비시가화지역의 계획적 개발 유도와 연결",
+        ],
+      },
+      {
+        title: "도시개발과 정비 법령",
+        points: [
+          "도시개발법은 구역지정, 시행자, 시행방식, 환지계획을 중심으로 학습",
+          "도시정비법은 정비구역, 조합, 사업시행계획, 관리처분계획을 구분",
+          "주택법과 건축법은 단지계획, 대지, 도로, 건축기준과 연결",
+        ],
+      },
+      {
+        title: "법규 문제 풀이법",
+        points: [
+          "정의, 절차, 권한 주체, 숫자 기준으로 문제를 분해",
+          "법령명과 계획명을 혼동하지 않도록 표로 정리",
+          "개정 가능성이 있어 접수 회차 전 최신 법령과 Q-Net 공고 확인",
+        ],
+      },
+    ],
+    terms: [
+      ["용도지역", "토지의 이용과 건축물 용도, 밀도를 포괄적으로 제한"],
+      ["용도지구", "용도지역 기능을 보완해 경관, 고도, 방재 등을 세부 제한"],
+      ["용도구역", "시가지 확산 방지, 자연 보전 등 특정 목적의 강한 제한"],
+      ["개발행위허가", "난개발 방지와 기반시설 적정성을 검토하는 허가 제도"],
+    ],
+  },
+];
+
+const writtenQuestions = [
+  {
+    id: "w01",
+    subject: "planning",
+    level: "기본",
+    question: "도시기본계획의 성격으로 가장 적절한 것은?",
+    options: [
+      "개별 건축허가 여부를 직접 결정하는 단기 집행계획",
+      "장기적인 도시 발전방향과 공간구조를 제시하는 종합계획",
+      "정비사업의 분양권 배분만을 정하는 권리계획",
+      "도로 폭원과 포장 재료만을 정하는 시설 설계도",
+    ],
+    answer: 1,
+    explanation:
+      "도시기본계획은 장기적이고 종합적인 방향계획입니다. 구체적인 집행은 도시관리계획, 사업계획, 실시계획 단계에서 다룹니다.",
+    takeaway: "기본계획은 방향, 관리계획은 집행으로 구분합니다.",
+  },
+  {
+    id: "w02",
+    subject: "design",
+    level: "기본",
+    question: "근린주구 이론에서 초등학교와 생활편익시설 배치 원칙으로 적절한 것은?",
+    options: [
+      "단지 외곽 간선도로 교차부에 집중 배치한다",
+      "보행 접근이 쉬운 중심부에 배치하고 통과교통을 줄인다",
+      "공업지역과 접한 완충녹지 내부에 배치한다",
+      "대중교통 접근성과 무관하게 주차장 규모만 기준으로 배치한다",
+    ],
+    answer: 1,
+    explanation:
+      "근린주구는 일상 서비스와 초등학교를 보행권 안에서 이용하도록 계획하는 것이 핵심입니다. 간선도로 통과교통은 주거지 내부에서 배제합니다.",
+    takeaway: "근린주구는 보행권, 초등학교, 생활편익시설, 통과교통 배제가 핵심입니다.",
+  },
+  {
+    id: "w03",
+    subject: "development",
+    level: "중요",
+    question: "환지방식 도시개발사업에 대한 설명으로 옳은 것은?",
+    options: [
+      "모든 토지를 전면 매수해 공공이 새로 분양하는 방식이다",
+      "종전 권리를 고려해 사업 후 토지를 다시 배분할 수 있다",
+      "토지소유자는 사업비 부담과 무관하게 종전 면적을 반드시 그대로 돌려받는다",
+      "기반시설 설치와 토지 재배치는 사업 내용에 포함될 수 없다",
+    ],
+    answer: 1,
+    explanation:
+      "환지방식은 종전 토지의 권리관계를 바탕으로 사업 후 토지를 재배치합니다. 공공시설 용지와 사업비 충당을 위해 감보가 발생할 수 있습니다.",
+    takeaway: "환지, 감보, 체비지, 권리 재배분을 한 묶음으로 기억합니다.",
+  },
+  {
+    id: "w04",
+    subject: "regional",
+    level: "기본",
+    question: "크리스탈러의 중심지이론과 가장 관련이 깊은 개념은?",
+    options: [
+      "농업 토지이용의 동심원적 분화",
+      "재화와 서비스 공급 중심지의 계층적 배치",
+      "공업 입지의 최소수송비 지점 탐색",
+      "도시 내부 주거지의 부채꼴 확장",
+    ],
+    answer: 1,
+    explanation:
+      "중심지이론은 중심지가 배후지에 재화와 서비스를 공급하며 계층 구조를 형성한다고 봅니다.",
+    takeaway: "크리스탈러는 중심지와 배후지, 베버는 공업입지, 튀넨은 농업입지입니다.",
+  },
+  {
+    id: "w05",
+    subject: "law",
+    level: "중요",
+    question: "용도지역, 용도지구, 용도구역의 관계 설명으로 적절한 것은?",
+    options: [
+      "셋은 모두 같은 제도이며 명칭만 다르다",
+      "용도지구는 용도지역의 기능을 보완해 세부 목적의 제한을 더할 수 있다",
+      "용도구역은 건축물 색채만 정하는 임의 디자인 지침이다",
+      "용도지역은 도시계획과 무관하게 민간 협약으로만 지정된다",
+    ],
+    answer: 1,
+    explanation:
+      "용도지역은 기본적인 토지이용과 밀도 제한의 틀이고, 용도지구는 경관, 고도, 방재 등 보완 목적의 제한을 더합니다. 용도구역은 특정 목적의 강한 공간 관리 수단입니다.",
+    takeaway: "지역은 기본 틀, 지구는 보완, 구역은 특수 목적 관리로 정리합니다.",
+  },
+  {
+    id: "w06",
+    subject: "planning",
+    level: "중요",
+    question: "계획인구 추정 시 유의할 점으로 가장 적절한 것은?",
+    options: [
+      "최근 1년 증가율만 사용하면 장기계획에 충분하다",
+      "추세연장 결과와 개발수용능력, 정책적 유입 가능성을 함께 검토한다",
+      "인구추정은 토지이용계획과 무관하므로 별도로 계산한다",
+      "감소도시는 계획인구 검토가 필요 없다",
+    ],
+    answer: 1,
+    explanation:
+      "계획인구는 단순 외삽만으로 정하지 않습니다. 과거 추세, 개발사업, 산업 변화, 기반시설 수용능력, 정책 목표를 종합해야 합니다.",
+    takeaway: "인구는 토지이용, 시설규모, 교통수요의 출발점입니다.",
+  },
+  {
+    id: "w07",
+    subject: "design",
+    level: "응용",
+    question: "보차분리 계획의 주된 목적과 가장 가까운 것은?",
+    options: [
+      "차량 통행속도를 모든 도로에서 동일하게 유지",
+      "보행 안전성과 생활공간의 쾌적성을 높임",
+      "도로 위계를 없애고 모든 교차로를 대형화",
+      "공원녹지 면적을 줄여 주차장으로 전환",
+    ],
+    answer: 1,
+    explanation:
+      "보차분리는 보행자와 차량의 상충을 줄여 안전, 쾌적성, 생활권 연결성을 높이는 계획 원리입니다.",
+    takeaway: "단지계획 문제는 안전, 접근성, 위계, 생활권을 함께 봅니다.",
+  },
+  {
+    id: "w08",
+    subject: "development",
+    level: "응용",
+    question: "도시정비사업 추진 과정에서 관리처분계획이 주로 다루는 내용은?",
+    options: [
+      "정비구역 안 권리자의 종후 자산 배분과 비용부담",
+      "전국 국토축의 장기 발전방향",
+      "초등학교 통학구역의 교육과정 편성",
+      "공원 식재 수종의 생육 관리만을 위한 계획",
+    ],
+    answer: 0,
+    explanation:
+      "관리처분계획은 기존 권리와 종후 자산, 분양, 비용부담 등 권리관계를 정리하는 중요한 단계입니다.",
+    takeaway: "정비사업은 구역지정, 조합, 사업시행, 관리처분, 착공 흐름으로 잡습니다.",
+  },
+  {
+    id: "w09",
+    subject: "regional",
+    level: "중요",
+    question: "성장거점전략의 한계로 자주 지적되는 것은?",
+    options: [
+      "거점 집중 투자가 주변 지역으로 충분히 파급되지 않을 수 있음",
+      "어떤 경우에도 지역 간 격차를 즉시 해소함",
+      "교통 접근성과 산업 연계성을 전혀 고려하지 않음",
+      "소규모 생활권 계획에서만 사용 가능함",
+    ],
+    answer: 0,
+    explanation:
+      "성장거점전략은 거점의 성장 효과가 주변으로 확산될 것을 기대하지만, 역류효과나 격차 확대 가능성도 검토해야 합니다.",
+    takeaway: "파급효과와 역류효과를 같이 쓰면 서술형에서도 점수를 얻습니다.",
+  },
+  {
+    id: "w10",
+    subject: "law",
+    level: "기본",
+    question: "도시계획시설에 해당하는 기반시설 예시로 가장 적절한 것은?",
+    options: [
+      "도로, 공원, 학교, 하수도 등 공공적 기능의 시설",
+      "개인 취미를 위한 실내 장식품",
+      "사업자 내부 회계 장부",
+      "건축물의 임대차 계약서 양식",
+    ],
+    answer: 0,
+    explanation:
+      "도시계획시설은 도시 기능 유지와 공공복리를 위해 계획적으로 설치되는 기반시설입니다.",
+    takeaway: "기반시설 종류는 기능별로 묶어 외우면 법규 점수가 안정됩니다.",
+  },
+  {
+    id: "w11",
+    subject: "planning",
+    level: "응용",
+    question: "압축도시 정책의 기대효과로 보기 어려운 것은?",
+    options: [
+      "대중교통 이용과 보행 접근성 향상",
+      "기반시설의 효율적 이용",
+      "무분별한 도시 외연 확산 억제",
+      "도시 활동을 전면 저밀 분산해 통행거리를 늘림",
+    ],
+    answer: 3,
+    explanation:
+      "압축도시는 고밀 복합, 대중교통 중심, 외연 확산 억제를 추구합니다. 저밀 분산과 장거리 통행 증가는 반대 방향입니다.",
+    takeaway: "압축도시, TOD, 혼합용도는 함께 출제되는 경우가 많습니다.",
+  },
+  {
+    id: "w12",
+    subject: "law",
+    level: "중요",
+    question: "법규 과목을 공부할 때 가장 안정적인 접근법은?",
+    options: [
+      "숫자 기준만 외우고 계획 체계는 보지 않는다",
+      "정의, 지정권자, 절차, 행위제한, 예외를 표로 비교한다",
+      "기출문제의 보기 순서만 외운다",
+      "개정 가능성이 없으므로 오래된 요약본만 사용한다",
+    ],
+    answer: 1,
+    explanation:
+      "법규 문제는 정의, 권한 주체, 절차, 제한, 예외가 보기로 바뀌어 나옵니다. 표로 비교하면 혼동을 줄일 수 있습니다.",
+    takeaway: "법규는 체계 표와 최신 공고 확인이 점수 방어의 핵심입니다.",
+  },
+];
+
+const practicalLessons = [
+  {
+    title: "조건문 해석",
+    body: "대상지 면적, 인구, 지형, 접근도로, 보전지역, 주변 시설을 먼저 표시합니다. 조건을 놓치면 도면이 예뻐도 감점이 큽니다.",
+    tags: ["조건표", "제약요소", "주변맥락"],
+  },
+  {
+    title: "계획인구와 수요 산정",
+    body: "등차, 등비, 최소자승 추정치를 계산하고, 개발수용능력과 과다계획 여부를 검토합니다. 산식과 단위를 답안에 남깁니다.",
+    tags: ["인구추정", "가구수", "원단위"],
+  },
+  {
+    title: "토지이용 배분",
+    body: "주거, 상업, 업무, 공업, 녹지, 도로, 공공시설 면적을 합계 100%로 맞춥니다. 계획 의도와 면적표가 일치해야 합니다.",
+    tags: ["면적표", "용도배치", "밀도"],
+  },
+  {
+    title: "가로망과 동선",
+    body: "간선도로는 외부 연결과 통과교통 처리, 집산도로는 생활권 연결, 국지도로는 접근 기능을 맡깁니다.",
+    tags: ["도로위계", "보행축", "환승"],
+  },
+  {
+    title: "공공시설과 녹지",
+    body: "학교, 공원, 커뮤니티 시설은 보행권과 중심성으로 배치합니다. 녹지는 단절된 조각이 아니라 축으로 연결합니다.",
+    tags: ["생활권시설", "공원녹지", "완충"],
+  },
+  {
+    title: "도면 마감",
+    body: "방위, 축척, 범례, 계획표, 면적표, 주요 치수, 도로 폭원, 계획 설명이 한 장에서 읽혀야 합니다.",
+    tags: ["방위", "축척", "범례"],
+  },
+];
+
+const practicalProblems = [
+  {
+    id: "p01",
+    kind: "계산형",
+    title: "계획인구 추정",
+    prompt:
+      "2010년 42,000명, 2015년 47,000명, 2020년 54,000명인 도시의 2030년 계획인구를 등차급수법과 등비급수법으로 검토하시오.",
+    answer:
+      "등차급수법은 2010~2020년 10년간 12,000명 증가, 연평균 1,200명 증가로 보아 2030년 66,000명입니다. 등비급수법은 연평균 증가율 약 2.54%를 적용해 2030년 약 69,400명입니다. 실기 답안에서는 두 결과의 차이와 개발수용능력 검토를 함께 적습니다.",
+    rubric: [
+      "연도 간격과 단위를 명확히 썼는가",
+      "등차와 등비 산식을 구분했는가",
+      "계획인구를 시설규모와 토지이용계획으로 연결했는가",
+    ],
+  },
+  {
+    id: "p02",
+    kind: "면적배분",
+    title: "토지이용 면적표 작성",
+    prompt:
+      "목표인구 60,000명, 1인당 주거용지 30㎡를 기준으로 주거용지 면적을 산정하고, 전체 계획구역 600ha에서 상업 6%, 녹지 20%, 도로 18%를 배분하시오.",
+    answer:
+      "주거용지는 60,000명 x 30㎡ = 1,800,000㎡ = 180ha입니다. 전체 600ha 기준 상업용지는 36ha, 녹지는 120ha, 도로는 108ha입니다. 나머지 156ha는 공공시설, 업무, 산업, 유보지 등 조건에 맞게 배분하고 합계가 600ha인지 확인합니다.",
+    rubric: [
+      "㎡와 ha 환산을 정확히 했는가",
+      "면적 합계가 전체 구역과 일치하는가",
+      "잔여 면적의 용도를 합리적으로 설명했는가",
+    ],
+  },
+  {
+    id: "p03",
+    kind: "도면형",
+    title: "생활권 중심 배치",
+    prompt:
+      "철도역이 남측에 있고 북측에 보전녹지가 있는 신시가지에서 상업중심, 주거지, 학교, 공원을 배치하는 계획안을 설명하시오.",
+    answer:
+      "상업중심은 철도역과 간선도로 결절부에 배치해 환승과 보행 접근성을 높입니다. 주거지는 보전녹지와 소음원 사이 완충을 고려해 중밀 주거와 저밀 주거를 단계적으로 배치합니다. 학교와 근린공원은 주거지 보행권 중심에 두고, 북측 보전녹지는 녹지축으로 연결합니다.",
+    rubric: [
+      "역세권과 상업중심의 관계가 명확한가",
+      "보전녹지와 완충녹지의 역할을 구분했는가",
+      "학교와 공원이 보행권 안에서 설명되었는가",
+    ],
+  },
+  {
+    id: "p04",
+    kind: "서술형",
+    title: "도로망 위계 검토",
+    prompt:
+      "대상지 중앙을 관통하는 기존 30m 도로가 있고, 동서 방향 보행축을 계획해야 한다. 도로망과 보행축 계획 원칙을 쓰시오.",
+    answer:
+      "기존 30m 도로는 간선 기능을 유지하되 주요 교차부를 계획 중심과 연계합니다. 집산도로는 생활권 중심과 주거지를 연결하고, 국지도로는 통과교통을 줄이는 구조로 둡니다. 동서 보행축은 학교, 공원, 상업시설, 대중교통 정류장을 연결하고 차량 교차부에는 안전한 횡단 처리를 계획합니다.",
+    rubric: [
+      "간선, 집산, 국지도로 기능을 구분했는가",
+      "보행축이 주요 시설과 연결되는가",
+      "교차부 안전과 통과교통 억제를 언급했는가",
+    ],
+  },
+];
+
+const planner = [
+  ["1주차", "도시계획론과 도시설계 기본개념을 정리하고 과목별 오답노트를 시작"],
+  ["2주차", "도시개발론, 국토 및 지역계획, 법규를 표로 정리하고 매일 20문제 풀이"],
+  ["3주차", "필기 전 과목 혼합 풀이와 실기 계산형, 면적표, 법규 검토 훈련"],
+  ["4주차", "실기 도면 작성 루틴, 시간 배분, 답안 마감 체크리스트 반복"],
+];
+
+const practicalChecklist = [
+  "문제 조건을 도면 여백에 먼저 표시했다",
+  "방위, 축척, 범례, 계획명, 면적표를 빠짐없이 넣었다",
+  "계획인구, 가구수, 시설수요 산식과 단위를 적었다",
+  "간선, 집산, 국지도로 위계와 폭원을 구분했다",
+  "학교, 공원, 상업중심을 생활권과 보행축으로 연결했다",
+  "보전지역, 완충녹지, 위험요소를 계획에 반영했다",
+  "합계 면적과 비율이 전체 면적과 일치한다",
+  "마지막 10분에 법정 기준, 색상, 선 굵기, 오탈자를 점검했다",
+];
+
+const viewTitles = {
+  dashboard: "도시계획기사 학습실",
+  writtenLecture: "1차 필기 기본강의",
+  writtenQuiz: "1차 필기 기출풀이",
+  practicalLecture: "2차 실기 기본강의",
+  practicalQuiz: "2차 실기 기출유형",
+  finalLab: "실전 연습실",
+};
+
+const defaultState = {
+  view: "dashboard",
+  selectedSubject: "planning",
+  quizSubject: "all",
+  quizIndex: 0,
+  answers: {},
+  revealed: {},
+  practicalRevealed: {},
+  lectureDone: [],
+  plannerDone: [],
+  checklistDone: [],
+  practicalNote: "",
+};
+
+let state = loadState();
+
+const app = document.querySelector("#app");
+const pageTitle = document.querySelector("#pageTitle");
+const navList = document.querySelector("#navList");
+const menuButton = document.querySelector("#menuButton");
+const resetProgress = document.querySelector("#resetProgress");
+
+document.querySelector("#todayText").textContent = new Intl.DateTimeFormat("ko-KR", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  weekday: "short",
+}).format(new Date());
+
+navList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-view]");
+  if (!button) return;
+  setView(button.dataset.view);
+});
+
+menuButton.addEventListener("click", () => {
+  document.body.classList.toggle("sidebar-open");
+});
+
+resetProgress.addEventListener("click", () => {
+  const confirmed = window.confirm("저장된 진도와 풀이 기록을 모두 초기화할까요?");
+  if (!confirmed) return;
+  state = { ...defaultState };
+  saveState();
+  render();
+});
+
+window.addEventListener("resize", debounce(() => {
+  drawCityCanvas();
+  drawPlanCanvas("planCanvas");
+}, 120));
+
+render();
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return { ...defaultState, ...saved };
+  } catch {
+    return { ...defaultState };
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function setView(view) {
+  state.view = view;
+  saveState();
+  document.body.classList.remove("sidebar-open");
+  render();
+  app.focus({ preventScroll: true });
+}
+
+function render() {
+  pageTitle.textContent = viewTitles[state.view] || viewTitles.dashboard;
+  document.querySelectorAll(".nav-item").forEach((item) => {
+    item.classList.toggle("is-active", item.dataset.view === state.view);
+  });
+
+  const renderers = {
+    dashboard: renderDashboard,
+    writtenLecture: renderWrittenLecture,
+    writtenQuiz: renderWrittenQuiz,
+    practicalLecture: renderPracticalLecture,
+    practicalQuiz: renderPracticalQuiz,
+    finalLab: renderFinalLab,
+  };
+
+  app.innerHTML = (renderers[state.view] || renderDashboard)();
+  bindCurrentView();
+  requestAnimationFrame(() => {
+    drawCityCanvas();
+    drawPlanCanvas("planCanvas");
+  });
+}
+
+function bindCurrentView() {
+  if (state.view === "dashboard") bindDashboard();
+  if (state.view === "writtenLecture") bindWrittenLecture();
+  if (state.view === "writtenQuiz") bindWrittenQuiz();
+  if (state.view === "practicalLecture") bindPracticalLecture();
+  if (state.view === "practicalQuiz") bindPracticalQuiz();
+  if (state.view === "finalLab") bindFinalLab();
+}
+
+function renderDashboard() {
+  const progress = getProgress();
+  return `
+    <div class="stack">
+      <section class="hero-grid">
+        <div class="surface padded hero-copy">
+          <span class="eyebrow">합격 흐름 설계</span>
+          <h2>필기 개념을 점수로, 실기 도면을 답안으로 바꾸는 학습실</h2>
+          <p>필기 5과목 기본강의, 기출 빈출유형 풀이, 실기 계산형과 도면형 연습을 한 곳에 묶었습니다. 오늘은 약한 과목을 하나 고르고, 문제를 풀고, 실기 체크리스트를 한 번 확인하면 충분히 앞으로 갑니다.</p>
+          <div class="hero-meta">
+            <div class="metric">
+              <span>필기 구조</span>
+              <strong>5과목</strong>
+            </div>
+            <div class="metric">
+              <span>문제 풀이</span>
+              <strong>${writtenQuestions.length}문항</strong>
+            </div>
+            <div class="metric">
+              <span>현재 진도</span>
+              <strong>${progress.percent}%</strong>
+            </div>
+          </div>
+          <div class="progress-shell" aria-label="전체 학습 진도">
+            <div class="progress-line"><div class="progress-bar" style="width:${progress.percent}%"></div></div>
+            <div class="progress-label">
+              <span>${progress.done}개 완료</span>
+              <span>총 ${progress.total}개 학습 행동</span>
+            </div>
+          </div>
+          <div class="button-row" style="margin-top:22px">
+            <button class="primary-button" data-go="writtenLecture" type="button">필기 기본강의 시작</button>
+            <button class="secondary-button" data-go="writtenQuiz" type="button">기출유형 바로 풀기</button>
+            <button class="ghost-button" data-go="practicalQuiz" type="button">실기 문제 확인</button>
+          </div>
+        </div>
+
+        <div class="surface visual-panel">
+          <div class="visual-heading">
+            <span class="eyebrow">도면 감각</span>
+            <h3>토지이용과 가로망을 같이 보는 미니맵</h3>
+            <p>실기는 계산이 도면으로 이어지는 시험입니다.</p>
+          </div>
+          <canvas id="cityCanvas" aria-label="도시계획 토지이용 미니맵"></canvas>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">시험 흐름</span>
+            <h2>필기와 실기를 분리해서 외우지 않기</h2>
+            <p>필기에서 배운 계획체계, 법규, 단지계획은 실기 도면과 산출근거에 그대로 다시 등장합니다.</p>
+          </div>
+        </div>
+        <div class="grid-3">
+          <article class="info-tile">
+            <h3>1차 필기 기본강의</h3>
+            <p>도시계획론부터 법규까지 과목별 핵심 개념과 자주 헷갈리는 용어를 정리합니다.</p>
+            <div class="tag-row">
+              <span class="tag">개념</span>
+              <span class="tag blue">용어</span>
+              <span class="tag green">표 정리</span>
+            </div>
+          </article>
+          <article class="info-tile">
+            <h3>1차 필기 기출풀이</h3>
+            <p>객관식 보기에서 자주 바뀌는 말장난을 해설 중심으로 연습합니다.</p>
+            <div class="tag-row">
+              <span class="tag amber">4지선다</span>
+              <span class="tag">오답노트</span>
+              <span class="tag coral">약점 확인</span>
+            </div>
+          </article>
+          <article class="info-tile">
+            <h3>2차 실기</h3>
+            <p>계획인구, 면적배분, 도로망, 시설배치, 도면 마감 체크를 단계별로 훈련합니다.</p>
+            <div class="tag-row">
+              <span class="tag green">계산</span>
+              <span class="tag blue">도면</span>
+              <span class="tag amber">서술</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">4주 압축 루틴</span>
+            <h2>오늘 무엇을 할지 바로 보이게</h2>
+          </div>
+          <button class="secondary-button" data-go="finalLab" type="button">체크리스트 열기</button>
+        </div>
+        ${renderPlannerTable(false)}
+      </section>
+    </div>
+  `;
+}
+
+function bindDashboard() {
+  app.querySelectorAll("[data-go]").forEach((button) => {
+    button.addEventListener("click", () => setView(button.dataset.go));
+  });
+}
+
+function renderWrittenLecture() {
+  const selected = getSelectedSubject();
+  return `
+    <div class="stack">
+      <section class="section-heading">
+        <div>
+          <span class="eyebrow">기본강의</span>
+          <h2>과목별 핵심을 먼저 잡기</h2>
+          <p>각 과목은 “시험에 나오는 정의 → 비교표 → 실기 연결” 순서로 읽으면 기억이 오래 갑니다.</p>
+        </div>
+      </section>
+
+      <section class="subject-layout">
+        <div class="subject-list">
+          ${subjects
+            .map(
+              (subject) => `
+                <button class="subject-button ${subject.id === selected.id ? "is-selected" : ""}" data-subject="${subject.id}" type="button">
+                  ${subject.title}
+                  <span>${subject.exam} · ${state.lectureDone.includes("written:" + subject.id) ? "완료" : "진행 전"}</span>
+                </button>
+              `,
+            )
+            .join("")}
+        </div>
+
+        <article class="surface padded module-detail">
+          <span class="eyebrow">${selected.exam}</span>
+          <h2>${selected.title}</h2>
+          <p>${selected.overview}</p>
+          <div class="tag-row">
+            ${selected.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
+          </div>
+
+          <div class="lesson-grid">
+            ${selected.lectures
+              .map(
+                (lesson) => `
+                  <div class="lesson-card">
+                    <h3>${lesson.title}</h3>
+                    <ul>${lesson.points.map((point) => `<li>${point}</li>`).join("")}</ul>
+                  </div>
+                `,
+              )
+              .join("")}
+          </div>
+
+          <div class="term-list">
+            ${selected.terms
+              .map(
+                ([term, description]) => `
+                  <div class="term">
+                    <strong>${term}</strong>
+                    <span>${description}</span>
+                  </div>
+                `,
+              )
+              .join("")}
+          </div>
+
+          <div class="button-row" style="margin-top:22px">
+            <button class="primary-button" id="completeLecture" type="button">
+              ${state.lectureDone.includes("written:" + selected.id) ? "완료 취소" : "이 과목 학습 완료"}
+            </button>
+            <button class="secondary-button" data-go="writtenQuiz" type="button">이어서 문제 풀기</button>
+          </div>
+        </article>
+      </section>
+    </div>
+  `;
+}
+
+function bindWrittenLecture() {
+  app.querySelectorAll("[data-subject]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedSubject = button.dataset.subject;
+      saveState();
+      render();
+    });
+  });
+
+  app.querySelector("#completeLecture").addEventListener("click", () => {
+    toggleArrayValue(state.lectureDone, "written:" + state.selectedSubject);
+    saveState();
+    render();
+  });
+
+  app.querySelectorAll("[data-go]").forEach((button) => {
+    button.addEventListener("click", () => setView(button.dataset.go));
+  });
+}
+
+function renderWrittenQuiz() {
+  const filtered = getFilteredQuestions();
+  const question = filtered[state.quizIndex] || filtered[0];
+  const selectedAnswer = question ? state.answers[question.id] : undefined;
+  const revealed = question ? Boolean(state.revealed[question.id]) : false;
+  const stats = getQuizStats(filtered);
+
+  if (!question) {
+    return `<div class="empty">선택한 과목의 문제가 없습니다.</div>`;
+  }
+
+  return `
+    <div class="stack">
+      <section class="section-heading">
+        <div>
+          <span class="eyebrow">필기 기출유형</span>
+          <h2>객관식은 보기의 함정을 읽는 시험</h2>
+          <p>실제 기출 원문을 그대로 복제한 문항이 아니라, 공개 출제범위와 빈출 개념을 바탕으로 만든 대표 풀이 문제입니다.</p>
+        </div>
+      </section>
+
+      <div class="button-row" aria-label="과목 필터">
+        <button class="chip-button ${state.quizSubject === "all" ? "is-selected" : ""}" data-filter="all" type="button">전체</button>
+        ${subjects
+          .map(
+            (subject) => `
+              <button class="chip-button ${state.quizSubject === subject.id ? "is-selected" : ""}" data-filter="${subject.id}" type="button">${subject.title}</button>
+            `,
+          )
+          .join("")}
+      </div>
+
+      <section class="quiz-layout">
+        <article class="surface padded quiz-box">
+          <div class="quiz-meta">
+            <span class="tag">${getSubjectTitle(question.subject)}</span>
+            <span class="tag amber">${question.level}</span>
+            <span class="tag blue">${state.quizIndex + 1} / ${filtered.length}</span>
+          </div>
+          <h2 class="question-title">${question.question}</h2>
+          <div class="option-list">
+            ${question.options
+              .map((option, index) => {
+                const classes = ["option-button"];
+                if (selectedAnswer === index) classes.push("is-picked");
+                if (revealed && index === question.answer) classes.push("is-correct");
+                if (revealed && selectedAnswer === index && selectedAnswer !== question.answer) classes.push("is-wrong");
+                return `<button class="${classes.join(" ")}" data-option="${index}" type="button">${index + 1}. ${option}</button>`;
+              })
+              .join("")}
+          </div>
+
+          <div class="answer-box ${revealed ? "is-visible" : ""}">
+            <strong>${selectedAnswer === question.answer ? "정답입니다." : "정답: " + (question.answer + 1) + "번"}</strong>
+            <p>${question.explanation}</p>
+            <p style="margin-top:8px"><strong>암기 포인트</strong> ${question.takeaway}</p>
+          </div>
+
+          <div class="button-row" style="margin-top:20px">
+            <button class="primary-button" id="revealAnswer" type="button">정답 확인</button>
+            <button class="secondary-button" id="prevQuestion" type="button">이전 문제</button>
+            <button class="secondary-button" id="nextQuestion" type="button">다음 문제</button>
+          </div>
+        </article>
+
+        <aside class="side-panel">
+          <div class="stat-card">
+            <h3>풀이 현황</h3>
+            <div class="mini-list">
+              <div class="mini-item"><span>풀이 문항</span><strong>${stats.answered}/${stats.total}</strong></div>
+              <div class="mini-item"><span>정답</span><strong>${stats.correct}</strong></div>
+              <div class="mini-item"><span>정답률</span><strong>${stats.accuracy}%</strong></div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <h3>오답 처리법</h3>
+            <p>틀린 문제는 보기에서 틀린 단어를 하나 찾아 표시하세요. 법규는 정의, 절차, 권한 주체가 자주 바뀝니다.</p>
+          </div>
+          <div class="stat-card">
+            <h3>과락 방어</h3>
+            <p>한 과목만 깊게 파기보다 모든 과목 기본문제를 먼저 맞히는 전략이 안정적입니다.</p>
+          </div>
+        </aside>
+      </section>
+    </div>
+  `;
+}
+
+function bindWrittenQuiz() {
+  app.querySelectorAll("[data-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.quizSubject = button.dataset.filter;
+      state.quizIndex = 0;
+      saveState();
+      render();
+    });
+  });
+
+  app.querySelectorAll("[data-option]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const question = getFilteredQuestions()[state.quizIndex];
+      state.answers[question.id] = Number(button.dataset.option);
+      saveState();
+      render();
+    });
+  });
+
+  app.querySelector("#revealAnswer").addEventListener("click", () => {
+    const question = getFilteredQuestions()[state.quizIndex];
+    state.revealed[question.id] = true;
+    saveState();
+    render();
+  });
+
+  app.querySelector("#prevQuestion").addEventListener("click", () => {
+    const total = getFilteredQuestions().length;
+    state.quizIndex = (state.quizIndex - 1 + total) % total;
+    saveState();
+    render();
+  });
+
+  app.querySelector("#nextQuestion").addEventListener("click", () => {
+    const total = getFilteredQuestions().length;
+    state.quizIndex = (state.quizIndex + 1) % total;
+    saveState();
+    render();
+  });
+}
+
+function renderPracticalLecture() {
+  return `
+    <div class="stack">
+      <section class="hero-grid">
+        <div class="surface padded hero-copy">
+          <span class="eyebrow">실기 기본강의</span>
+          <h2>조건 해석, 계산, 배치, 마감을 하나의 루틴으로</h2>
+          <p>실기 시험은 정답 하나를 고르는 시험이 아니라, 조건을 읽고 공간계획의 근거를 도면과 표로 설득하는 시험입니다. 계산 결과가 토지이용계획과 시설배치로 이어져야 합니다.</p>
+          <div class="tag-row">
+            <span class="tag green">계산형</span>
+            <span class="tag blue">도면형</span>
+            <span class="tag amber">서술형</span>
+            <span class="tag coral">마감체크</span>
+          </div>
+          <div class="button-row" style="margin-top:22px">
+            <button class="primary-button" id="completePracticalLecture" type="button">
+              ${state.lectureDone.includes("practical:basic") ? "실기 기본강의 완료 취소" : "실기 기본강의 완료"}
+            </button>
+            <button class="secondary-button" data-go="practicalQuiz" type="button">실기 기출유형 풀기</button>
+          </div>
+        </div>
+        <div class="surface visual-panel">
+          <div class="visual-heading">
+            <span class="eyebrow">실기 도면</span>
+            <h3>색, 선, 표가 같이 읽혀야 합니다</h3>
+            <p>아래 예시는 토지이용과 도로 위계를 같이 표현한 연습 도면입니다.</p>
+          </div>
+          <canvas id="planCanvas" aria-label="실기 도면 예시"></canvas>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">강의 목차</span>
+            <h2>답안 작성 순서</h2>
+          </div>
+        </div>
+        <div class="grid-3">
+          ${practicalLessons
+            .map(
+              (lesson) => `
+                <article class="lecture-step">
+                  <h3>${lesson.title}</h3>
+                  <p>${lesson.body}</p>
+                  <div class="tag-row">${lesson.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
+                </article>
+              `,
+            )
+            .join("")}
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">산식 암기</span>
+            <h2>계산형에서 자주 쓰는 기본식</h2>
+          </div>
+        </div>
+        <table class="study-table">
+          <thead>
+            <tr><th>항목</th><th>핵심식</th><th>답안 작성 포인트</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>등차급수법</td><td>장래인구 = 현재인구 + 연평균 증가수 x 기간</td><td>증가수의 기준 기간과 단위를 명확히 씁니다.</td></tr>
+            <tr><td>등비급수법</td><td>장래인구 = 현재인구 x (1 + 증가율)<sup>기간</sup></td><td>증가율을 연율로 환산했는지 확인합니다.</td></tr>
+            <tr><td>주거용지</td><td>계획인구 x 1인당 주거용지 원단위</td><td>㎡를 ha로 바꿀 때 10,000㎡ = 1ha를 사용합니다.</td></tr>
+            <tr><td>시설수요</td><td>계획인구 또는 가구수 x 원단위</td><td>계산 결과를 학교, 공원, 도로 계획에 연결합니다.</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  `;
+}
+
+function bindPracticalLecture() {
+  app.querySelector("#completePracticalLecture").addEventListener("click", () => {
+    toggleArrayValue(state.lectureDone, "practical:basic");
+    saveState();
+    render();
+  });
+  app.querySelectorAll("[data-go]").forEach((button) => {
+    button.addEventListener("click", () => setView(button.dataset.go));
+  });
+}
+
+function renderPracticalQuiz() {
+  return `
+    <div class="stack">
+      <section class="section-heading">
+        <div>
+          <span class="eyebrow">실기 기출유형</span>
+          <h2>계산과 도면을 연결하는 대표 문제</h2>
+          <p>실기 답안은 “산식, 판단, 도면 반영” 세 가지가 같이 보여야 점수가 안정됩니다.</p>
+        </div>
+      </section>
+
+      <section class="grid-2">
+        ${practicalProblems
+          .map(
+            (problem) => `
+              <article class="problem-card">
+                <span class="tag amber">${problem.kind}</span>
+                <h3 style="margin-top:12px">${problem.title}</h3>
+                <p>${problem.prompt}</p>
+                <div class="answer-box ${state.practicalRevealed[problem.id] ? "is-visible" : ""}">
+                  <strong>모범 접근</strong>
+                  <p>${problem.answer}</p>
+                  <div class="rubric" style="margin-top:12px">
+                    <strong>채점 포인트</strong>
+                    <ul>${problem.rubric.map((item) => `<li>${item}</li>`).join("")}</ul>
+                  </div>
+                </div>
+                <div class="button-row" style="margin-top:16px">
+                  <button class="secondary-button" data-practical="${problem.id}" type="button">
+                    ${state.practicalRevealed[problem.id] ? "풀이 닫기" : "풀이 보기"}
+                  </button>
+                </div>
+              </article>
+            `,
+          )
+          .join("")}
+      </section>
+
+      <section class="draw-grid">
+        <div class="surface padded">
+          <span class="eyebrow">도면형 연습</span>
+          <h2 style="margin:6px 0 10px">신시가지 배치 예시</h2>
+          <p style="color:var(--muted);line-height:1.65">남측 철도역, 북측 보전녹지, 중앙 간선도로 조건을 반영해 상업중심과 생활권을 배치합니다.</p>
+          <div class="plan-canvas-wrap" style="margin-top:16px">
+            <canvas id="planCanvas" aria-label="실기 신시가지 배치 예시"></canvas>
+          </div>
+        </div>
+        <div class="surface padded">
+          <span class="eyebrow">자가 채점</span>
+          <h2 style="margin:6px 0 12px">답안에 들어갔는지 확인</h2>
+          ${renderChecklist("practical")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function bindPracticalQuiz() {
+  app.querySelectorAll("[data-practical]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.practical;
+      state.practicalRevealed[id] = !state.practicalRevealed[id];
+      saveState();
+      render();
+    });
+  });
+
+  bindChecklist();
+}
+
+function renderFinalLab() {
+  const stats = getQuizStats(writtenQuestions);
+  return `
+    <div class="stack">
+      <section class="section-heading">
+        <div>
+          <span class="eyebrow">실전 연습실</span>
+          <h2>진도, 오답, 실기 메모를 한 번에 점검</h2>
+          <p>시험 직전에는 새로운 내용을 늘리기보다 틀린 문제와 도면 마감 실수를 줄이는 것이 효율적입니다.</p>
+        </div>
+      </section>
+
+      <section class="grid-3">
+        <article class="stat-card">
+          <h3>필기 풀이</h3>
+          <div class="mini-list">
+            <div class="mini-item"><span>전체</span><strong>${stats.total}</strong></div>
+            <div class="mini-item"><span>푼 문제</span><strong>${stats.answered}</strong></div>
+            <div class="mini-item"><span>정답률</span><strong>${stats.accuracy}%</strong></div>
+          </div>
+        </article>
+        <article class="stat-card">
+          <h3>강의 완료</h3>
+          <div class="mini-list">
+            <div class="mini-item"><span>필기</span><strong>${state.lectureDone.filter((id) => id.startsWith("written:")).length}/${subjects.length}</strong></div>
+            <div class="mini-item"><span>실기</span><strong>${state.lectureDone.includes("practical:basic") ? "완료" : "진행 전"}</strong></div>
+          </div>
+        </article>
+        <article class="stat-card">
+          <h3>실기 체크</h3>
+          <div class="mini-list">
+            <div class="mini-item"><span>체크 항목</span><strong>${state.checklistDone.length}/${practicalChecklist.length}</strong></div>
+            <div class="mini-item"><span>목표</span><strong>실수 0개</strong></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="grid-2">
+        <article class="surface padded">
+          <span class="eyebrow">학습 계획</span>
+          <h2 style="margin:6px 0 14px">4주 루틴 체크</h2>
+          ${renderPlannerTable(true)}
+        </article>
+        <article class="surface padded">
+          <span class="eyebrow">실기 마감</span>
+          <h2 style="margin:6px 0 14px">도면 제출 전 체크리스트</h2>
+          ${renderChecklist("final")}
+        </article>
+      </section>
+
+      <section class="draw-grid">
+        <div class="surface padded">
+          <span class="eyebrow">답안 메모</span>
+          <h2 style="margin:6px 0 12px">실기 서술 연습</h2>
+          <textarea class="textarea" id="practicalNote" placeholder="예: 상업중심은 철도역과 간선도로 결절부에 배치하고, 주거지는 보전녹지와 연계한 생활권 단위로 구성한다.">${escapeHtml(state.practicalNote)}</textarea>
+          <div class="button-row" style="margin-top:12px">
+            <button class="secondary-button" id="saveNote" type="button">메모 저장</button>
+            <button class="ghost-button" id="clearNote" type="button">메모 비우기</button>
+          </div>
+        </div>
+        <div class="surface padded">
+          <span class="eyebrow">도면 복습</span>
+          <h2 style="margin:6px 0 12px">배치 논리 다시 보기</h2>
+          <div class="plan-canvas-wrap">
+            <canvas id="planCanvas" aria-label="실전 도면 복습 예시"></canvas>
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function bindFinalLab() {
+  app.querySelectorAll("[data-plan]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      toggleArrayValue(state.plannerDone, checkbox.dataset.plan, checkbox.checked);
+      saveState();
+      render();
+    });
+  });
+
+  bindChecklist();
+
+  const note = app.querySelector("#practicalNote");
+  app.querySelector("#saveNote").addEventListener("click", () => {
+    state.practicalNote = note.value;
+    saveState();
+  });
+
+  app.querySelector("#clearNote").addEventListener("click", () => {
+    state.practicalNote = "";
+    saveState();
+    render();
+  });
+}
+
+function renderPlannerTable(interactive) {
+  if (!interactive) {
+    return `
+      <table class="study-table">
+        <thead><tr><th>기간</th><th>학습 목표</th><th>핵심 산출물</th></tr></thead>
+        <tbody>
+          ${planner
+            .map(
+              ([week, goal], index) => `
+                <tr>
+                  <td>${week}</td>
+                  <td>${goal}</td>
+                  <td>${index < 2 ? "개념표와 오답노트" : "실기 답안지와 도면"}</td>
+                </tr>
+              `,
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  return `
+    <div class="planner">
+      ${planner
+        .map(
+          ([week, goal], index) => `
+            <label class="planner-day">
+              <strong>${week}</strong>
+              <span>${goal}</span>
+              <input data-plan="${index}" type="checkbox" ${state.plannerDone.includes(String(index)) ? "checked" : ""} />
+            </label>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderChecklist(origin) {
+  return practicalChecklist
+    .map(
+      (item, index) => `
+        <label class="check-control">
+          <input data-check="${index}" data-origin="${origin}" type="checkbox" ${state.checklistDone.includes(String(index)) ? "checked" : ""} />
+          <span>${item}</span>
+        </label>
+      `,
+    )
+    .join("");
+}
+
+function bindChecklist() {
+  app.querySelectorAll("[data-check]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      toggleArrayValue(state.checklistDone, checkbox.dataset.check, checkbox.checked);
+      saveState();
+      if (checkbox.dataset.origin === "final") render();
+    });
+  });
+}
+
+function getSelectedSubject() {
+  return subjects.find((subject) => subject.id === state.selectedSubject) || subjects[0];
+}
+
+function getSubjectTitle(subjectId) {
+  return subjects.find((subject) => subject.id === subjectId)?.title || "전체";
+}
+
+function getFilteredQuestions() {
+  const filtered =
+    state.quizSubject === "all"
+      ? writtenQuestions
+      : writtenQuestions.filter((question) => question.subject === state.quizSubject);
+
+  if (state.quizIndex >= filtered.length) state.quizIndex = 0;
+  return filtered;
+}
+
+function getQuizStats(questions) {
+  const answered = questions.filter((question) => state.answers[question.id] !== undefined);
+  const correct = answered.filter((question) => state.answers[question.id] === question.answer);
+  return {
+    total: questions.length,
+    answered: answered.length,
+    correct: correct.length,
+    accuracy: answered.length ? Math.round((correct.length / answered.length) * 100) : 0,
+  };
+}
+
+function getProgress() {
+  const correctAnswers = writtenQuestions.filter(
+    (question) => state.answers[question.id] === question.answer,
+  ).length;
+  const total = subjects.length + 1 + writtenQuestions.length + practicalChecklist.length + planner.length;
+  const done =
+    state.lectureDone.filter((id) => id.startsWith("written:")).length +
+    (state.lectureDone.includes("practical:basic") ? 1 : 0) +
+    correctAnswers +
+    state.checklistDone.length +
+    state.plannerDone.length;
+  return {
+    done,
+    total,
+    percent: Math.min(100, Math.round((done / total) * 100)),
+  };
+}
+
+function toggleArrayValue(array, value, force) {
+  const normalized = String(value);
+  const index = array.indexOf(normalized);
+  const shouldAdd = force === undefined ? index === -1 : Boolean(force);
+
+  if (shouldAdd && index === -1) {
+    array.push(normalized);
+  }
+
+  if (!shouldAdd && index !== -1) {
+    array.splice(index, 1);
+  }
+}
+
+function drawCityCanvas() {
+  const canvas = document.querySelector("#cityCanvas");
+  if (!canvas) return;
+
+  const ctx = setupCanvas(canvas);
+  if (!ctx) return;
+  const { width, height } = canvas.getBoundingClientRect();
+
+  ctx.fillStyle = "#dfe8e6";
+  ctx.fillRect(0, 0, width, height);
+
+  drawParcel(ctx, 22, 24, width * 0.42, height * 0.36, "#f2c9b8", "주거");
+  drawParcel(ctx, width * 0.48, 26, width * 0.22, height * 0.25, "#f3d36f", "상업");
+  drawParcel(ctx, width * 0.72, 26, width * 0.22, height * 0.33, "#c9d59c", "공공");
+  drawParcel(ctx, 24, height * 0.48, width * 0.28, height * 0.3, "#b9d7bb", "공원");
+  drawParcel(ctx, width * 0.36, height * 0.52, width * 0.24, height * 0.32, "#d8c4e8", "업무");
+  drawParcel(ctx, width * 0.64, height * 0.48, width * 0.3, height * 0.34, "#b7d0e8", "산업");
+
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 14;
+  ctx.lineCap = "round";
+  drawLine(ctx, width * 0.1, height * 0.43, width * 0.92, height * 0.43);
+  drawLine(ctx, width * 0.45, height * 0.08, width * 0.45, height * 0.9);
+  ctx.strokeStyle = "#6f8580";
+  ctx.lineWidth = 3;
+  drawLine(ctx, width * 0.1, height * 0.43, width * 0.92, height * 0.43);
+  drawLine(ctx, width * 0.45, height * 0.08, width * 0.45, height * 0.9);
+
+  ctx.strokeStyle = "#267c6f";
+  ctx.lineWidth = 5;
+  ctx.setLineDash([8, 7]);
+  drawLine(ctx, width * 0.12, height * 0.76, width * 0.9, height * 0.2);
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = "#17211f";
+  ctx.font = "700 13px Apple SD Gothic Neo, sans-serif";
+  ctx.fillText("녹지축 + 보행축", width * 0.18, height * 0.72);
+  ctx.fillText("간선도로", width * 0.68, height * 0.4);
+}
+
+function drawPlanCanvas(id) {
+  const canvas = document.querySelector(`#${id}`);
+  if (!canvas) return;
+
+  const ctx = setupCanvas(canvas);
+  if (!ctx) return;
+  const { width, height } = canvas.getBoundingClientRect();
+
+  ctx.fillStyle = "#eef3f1";
+  ctx.fillRect(0, 0, width, height);
+
+  const margin = 22;
+  const mapW = width - margin * 2;
+  const mapH = height - margin * 2;
+
+  ctx.fillStyle = "#f8fbfa";
+  ctx.strokeStyle = "#6f8580";
+  ctx.lineWidth = 2;
+  ctx.fillRect(margin, margin, mapW, mapH);
+  ctx.strokeRect(margin, margin, mapW, mapH);
+
+  drawParcel(ctx, margin + 12, margin + 12, mapW - 24, mapH * 0.18, "#b9d7bb", "보전녹지");
+  drawParcel(ctx, margin + 24, margin + mapH * 0.24, mapW * 0.34, mapH * 0.28, "#f2c9b8", "저밀주거");
+  drawParcel(ctx, margin + mapW * 0.42, margin + mapH * 0.24, mapW * 0.28, mapH * 0.28, "#f0bfa7", "중밀주거");
+  drawParcel(ctx, margin + mapW * 0.72, margin + mapH * 0.24, mapW * 0.2, mapH * 0.28, "#c9d59c", "학교");
+  drawParcel(ctx, margin + mapW * 0.16, margin + mapH * 0.58, mapW * 0.24, mapH * 0.22, "#f3d36f", "상업");
+  drawParcel(ctx, margin + mapW * 0.46, margin + mapH * 0.58, mapW * 0.28, mapH * 0.22, "#d8c4e8", "업무");
+  drawParcel(ctx, margin + mapW * 0.78, margin + mapH * 0.58, mapW * 0.15, mapH * 0.22, "#b9d7bb", "근린공원");
+
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 16;
+  drawLine(ctx, margin + 8, margin + mapH * 0.55, margin + mapW - 8, margin + mapH * 0.55);
+  ctx.strokeStyle = "#596b67";
+  ctx.lineWidth = 3;
+  drawLine(ctx, margin + 8, margin + mapH * 0.55, margin + mapW - 8, margin + mapH * 0.55);
+
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 11;
+  drawLine(ctx, margin + mapW * 0.48, margin + mapH * 0.2, margin + mapW * 0.48, margin + mapH * 0.9);
+  ctx.strokeStyle = "#7d8d89";
+  ctx.lineWidth = 2;
+  drawLine(ctx, margin + mapW * 0.48, margin + mapH * 0.2, margin + mapW * 0.48, margin + mapH * 0.9);
+
+  ctx.strokeStyle = "#117c73";
+  ctx.lineWidth = 4;
+  ctx.setLineDash([8, 6]);
+  drawLine(ctx, margin + mapW * 0.14, margin + mapH * 0.72, margin + mapW * 0.9, margin + mapH * 0.36);
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = "#17211f";
+  ctx.font = "700 13px Apple SD Gothic Neo, sans-serif";
+  ctx.fillText("철도역", margin + mapW * 0.16, margin + mapH - 12);
+  ctx.fillText("30m 간선도로", margin + mapW * 0.58, margin + mapH * 0.53);
+  ctx.fillText("생활보행축", margin + mapW * 0.52, margin + mapH * 0.74);
+
+  ctx.fillStyle = "#315f9f";
+  ctx.beginPath();
+  ctx.arc(margin + mapW * 0.22, margin + mapH * 0.92, 8, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawParcel(ctx, x, y, w, h, color, label) {
+  ctx.fillStyle = color;
+  ctx.strokeStyle = "rgba(23,33,31,0.2)";
+  ctx.lineWidth = 1.5;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = "#17211f";
+  ctx.font = "700 13px Apple SD Gothic Neo, Noto Sans KR, sans-serif";
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
+  ctx.fillText(label, x + w / 2, y + h / 2);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+}
+
+function drawLine(ctx, x1, y1, x2, y2) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+function setupCanvas(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.round(rect.width * ratio);
+  canvas.height = Math.round(rect.height * ratio);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  return ctx;
+}
+
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => fn(...args), delay);
+  };
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
