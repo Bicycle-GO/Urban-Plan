@@ -439,33 +439,48 @@ const sampleWrittenQuestions = [
   },
 ];
 
-const activeExam = window.URBAN_PLAN_EXAM_2022_1 || {
+const fallbackExam = window.URBAN_PLAN_EXAM_2022_1 || {
   id: "15428",
   title: "도시계획기사 필기 2022년 제1회",
   durationMinutes: 150,
   questions: sampleWrittenQuestions,
 };
 const examCatalog = window.URBAN_PLAN_EXAM_CATALOG || [];
+const examArchive = window.URBAN_PLAN_EXAM_ARCHIVE || { [fallbackExam.id]: fallbackExam };
 const examEnhancements = window.URBAN_PLAN_EXPLANATIONS_2022_1 || {};
+let activeExam = fallbackExam;
+let writtenQuestions = buildWrittenQuestions(activeExam);
 
-const writtenQuestions = activeExam.questions.map((question, index) => {
-  const enhancement = examEnhancements[String(question.number || index + 1)] || {};
-  const accuracy = Number.isFinite(question.accuracy) ? question.accuracy : 65;
-  const level = accuracy >= 75 ? "쉬움" : accuracy >= 55 ? "보통" : "어려움";
-  return {
-    ...question,
-    ...enhancement,
-    options: enhancement.options || question.options,
-    number: question.number || index + 1,
-    level,
-    explanation:
-      enhancement.explanation ||
-      `정답은 ${question.answer + 1}번입니다. 정답 보기의 핵심 개념을 다시 확인해 보세요.`,
-    takeaway:
-      enhancement.takeaway ||
-      `정답 보기: ${question.options[question.answer] || `${question.answer + 1}번`}`,
-  };
-});
+function buildWrittenQuestions(exam) {
+  const hasDetailedExplanations = exam.id === "15428";
+  return exam.questions.map((question, index) => {
+    const enhancement = hasDetailedExplanations
+      ? examEnhancements[String(question.number || index + 1)] || {}
+      : {};
+    const accuracy = Number.isFinite(question.accuracy) ? question.accuracy : 65;
+    const level = accuracy >= 75 ? "쉬움" : accuracy >= 55 ? "보통" : "어려움";
+    const answerText = question.options[question.answer] || `${question.answer + 1}번`;
+    return {
+      ...question,
+      ...enhancement,
+      options: enhancement.options || question.options,
+      optionImageUrls: enhancement.options ? [] : question.optionImageUrls,
+      questionImageUrls: enhancement.figure ? [] : question.questionImageUrls,
+      number: question.number || index + 1,
+      level,
+      hasDetailedExplanation: Boolean(enhancement.explanation),
+      explanation:
+        enhancement.explanation ||
+        `정답은 ${question.answer + 1}번입니다. 이 회차는 정답 확인용으로 제공되며 상세 해설은 준비 중입니다.`,
+      takeaway: enhancement.takeaway || `정답 보기: ${answerText}`,
+    };
+  });
+}
+
+function activateExam(examId) {
+  activeExam = examArchive[String(examId)] || examArchive[examCatalog[0]?.id] || fallbackExam;
+  writtenQuestions = buildWrittenQuestions(activeExam);
+}
 
 const practicalLessons = [
   {
@@ -760,6 +775,7 @@ const viewTitles = {
 
 const defaultState = {
   view: "writtenQuiz",
+  selectedExamId: "15428",
   selectedSubject: "planning",
   quizSubject: "all",
   quizIndex: 0,
@@ -777,6 +793,8 @@ const defaultState = {
 };
 
 let state = loadState();
+activateExam(state.selectedExamId);
+state.selectedExamId = activeExam.id;
 let quizTimerIntervalId = null;
 
 const app = document.querySelector("#app");
@@ -884,8 +902,8 @@ function renderDashboard() {
       <section class="hero-grid">
         <div class="surface padded hero-copy">
           <span class="eyebrow">합격 흐름 설계</span>
-          <h2>100문항을 실전처럼 풀고, 근거까지 이해하는 학습실</h2>
-          <p>2022년 1회 도시계획기사 필기 전 문항을 CBT 흐름으로 구성했습니다. 번호판에서 풀이 상태를 확인하고, 채점 뒤에는 과목별 점수와 새로 작성한 핵심 해설을 함께 복습할 수 있습니다.</p>
+          <h2>59개 회차를 실전처럼 풀고, 정답까지 바로 확인하는 학습실</h2>
+          <p>COMCBT 도시계획기사 자료의 2003년부터 2022년까지 59개 회차를 회차 선택형 CBT로 구성했습니다. 2022년 1회는 새로 작성한 상세 해설까지 함께 복습할 수 있습니다.</p>
           <div class="hero-meta">
             <div class="metric">
               <span>필기 구조</span>
@@ -1221,14 +1239,29 @@ function renderCbtQuiz() {
   const remaining = getTimerRemainingSeconds();
   const answeredPercent = Math.round((totalStats.answered / writtenQuestions.length) * 100);
   const archiveCount = examCatalog.length || 59;
+  const currentBookmarks = writtenQuestions.filter((item) => state.bookmarks.includes(item.id)).length;
+  const hasDetailedExplanations = activeExam.id === "15428";
 
   return `
     <div class="stack cbt-page">
       <section class="surface cbt-hero">
         <div class="cbt-hero-copy">
-          <span class="eyebrow">2022년 1회 · 실제 기출</span>
+          <div class="exam-picker-row">
+            <label for="examSelect">
+              <span>기출 회차 선택</span>
+              <select id="examSelect" aria-label="도시계획기사 기출 회차">
+                ${examCatalog
+                  .map(
+                    (exam) => `<option value="${exam.id}" ${exam.id === activeExam.id ? "selected" : ""}>${escapeHtml(exam.title)} · ${exam.date}</option>`,
+                  )
+                  .join("")}
+              </select>
+            </label>
+            <a href="${activeExam.sourceArticleUrl || activeExam.sourceIndexUrl || "https://www.comcbt.com/xe/dy"}" target="_blank" rel="noreferrer">COMCBT 회차 원문 ↗</a>
+          </div>
+          <span class="eyebrow">${escapeHtml(activeExam.date || "2022-03-05")} · 실제 기출</span>
           <h2>${escapeHtml(activeExam.title)}</h2>
-          <p>한 화면에 한 문제씩 풀고, 100문항 번호판에서 미풀이·오답·북마크 상태를 바로 확인하세요. 해설은 원 사이트의 이용자 해설을 옮기지 않고 이 학습실을 위해 새로 작성했습니다.</p>
+          <p>한 화면에 한 문제씩 풀고, 100문항 번호판에서 미풀이·오답·북마크 상태를 바로 확인하세요. ${hasDetailedExplanations ? "이 회차의 상세 해설은 원 사이트 이용자 해설을 옮기지 않고 이 학습실을 위해 새로 작성했습니다." : "이 회차는 문항·정답과 원문 링크를 제공하며 상세 해설은 순차적으로 보강합니다."}</p>
           <div class="exam-facts" aria-label="시험 정보">
             <span><strong>${writtenQuestions.length}</strong>문항</span>
             <span><strong>${subjects.length}</strong>과목</span>
@@ -1304,7 +1337,10 @@ function renderCbtQuiz() {
                 return `
                   <button class="${classes.join(" ")}" data-option="${index}" type="button" aria-pressed="${selectedAnswer === index}" ${state.examSubmitted ? "disabled" : ""}>
                     <span class="option-index" aria-hidden="true">${index + 1}</span>
-                    <span>${escapeHtml(option || `선택지 ${index + 1}`)}</span>
+                    <span class="option-content">
+                      <span>${escapeHtml(option || (question.optionImageUrls?.[index]?.length ? `그림 ${index + 1}` : `선택지 ${index + 1}`))}</span>
+                      ${renderOptionImages(question, index)}
+                    </span>
                   </button>
                 `;
               })
@@ -1322,11 +1358,11 @@ function renderCbtQuiz() {
                       : `오답 · 정답 ${question.answer + 1}번`
                 }
               </span>
-              <strong>${escapeHtml(question.options[question.answer])}</strong>
+              <strong>${escapeHtml(question.options[question.answer] || `${question.answer + 1}번 보기`)}</strong>
             </div>
             <div class="explanation-grid">
               <div>
-                <span class="explanation-label">왜 정답일까요?</span>
+                <span class="explanation-label">${question.hasDetailedExplanation ? "왜 정답일까요?" : "정답 안내"}</span>
                 <p>${escapeHtml(question.explanation)}</p>
               </div>
               <div class="takeaway-card">
@@ -1335,7 +1371,10 @@ function renderCbtQuiz() {
               </div>
             </div>
             ${question.subject === "law" ? `<p class="law-note">법규 문항은 2022년 출제 기준입니다. 현재 조문과 달라질 수 있으므로 최신 법령을 함께 확인하세요.</p>` : ""}
-            <a class="source-link" href="${question.sourceUrl || activeExam.sourceUrl}" target="_blank" rel="noreferrer">원문 문항 확인</a>
+            <div class="source-links">
+              <a class="source-link" href="${question.sourceUrl || activeExam.sourceUrl}" target="_blank" rel="noreferrer">COMCBT 원문 문항 확인</a>
+              <a class="source-link" href="${activeExam.sourceArticleUrl || activeExam.sourceIndexUrl || "https://www.comcbt.com/xe/dy"}" target="_blank" rel="noreferrer">회차 자료 페이지 확인</a>
+            </div>
           </section>
 
           <div class="question-actions">
@@ -1359,7 +1398,7 @@ function renderCbtQuiz() {
             <div class="mini-list">
               <div class="mini-item"><span>푼 문제</span><strong>${filteredStats.answered}/${filteredStats.total}</strong></div>
               <div class="mini-item"><span>현재 정답</span><strong>${filteredStats.correct}</strong></div>
-              <div class="mini-item"><span>북마크</span><strong>${state.bookmarks.length}</strong></div>
+              <div class="mini-item"><span>북마크</span><strong>${currentBookmarks}</strong></div>
             </div>
           </div>
 
@@ -1413,6 +1452,20 @@ function renderCbtQuiz() {
 }
 
 function bindCbtQuiz() {
+  app.querySelector("#examSelect")?.addEventListener("change", (event) => {
+    pauseQuizTimer();
+    state.selectedExamId = event.target.value;
+    activateExam(state.selectedExamId);
+    state.quizSubject = "all";
+    state.quizIndex = 0;
+    state.examSubmitted = false;
+    state.timerEnd = null;
+    state.timerRemaining = EXAM_DURATION_SECONDS;
+    saveState();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
   app.querySelectorAll("[data-filter]").forEach((button) => {
     button.addEventListener("click", () => {
       state.quizSubject = button.dataset.filter;
@@ -1472,9 +1525,14 @@ function bindCbtQuiz() {
 
   app.querySelector("#restartExam")?.addEventListener("click", () => {
     if (!window.confirm("현재 답안과 채점 결과를 지우고 처음부터 다시 풀까요?")) return;
-    state.answers = {};
-    state.revealed = {};
-    state.bookmarks = [];
+    const currentQuestionIds = new Set(writtenQuestions.map((question) => question.id));
+    state.answers = Object.fromEntries(
+      Object.entries(state.answers).filter(([questionId]) => !currentQuestionIds.has(questionId)),
+    );
+    state.revealed = Object.fromEntries(
+      Object.entries(state.revealed).filter(([questionId]) => !currentQuestionIds.has(questionId)),
+    );
+    state.bookmarks = state.bookmarks.filter((questionId) => !currentQuestionIds.has(questionId));
     state.examSubmitted = false;
     state.quizSubject = "all";
     state.quizIndex = 0;
@@ -1537,12 +1595,44 @@ function moveQuizQuestion(direction) {
 }
 
 function renderQuestionFigure(question) {
-  if (!question.figure) return "";
+  if (question.figure) {
+    return `
+      <section class="question-figure" aria-label="문제 자료">
+        <span class="explanation-label">문제 자료</span>
+        <div class="figure-content">${question.figure}</div>
+      </section>
+    `;
+  }
+
+  const images = Array.isArray(question.questionImageUrls) ? question.questionImageUrls : [];
+  if (!images.length) return "";
   return `
     <section class="question-figure" aria-label="문제 자료">
       <span class="explanation-label">문제 자료</span>
-      <div class="figure-content">${question.figure}</div>
+      <div class="source-figure-grid">
+        ${images
+          .map(
+            (imageUrl, index) => `<img src="${escapeHtml(imageUrl)}" alt="${question.number}번 문제 자료 ${index + 1}" loading="lazy" referrerpolicy="no-referrer" />`,
+          )
+          .join("")}
+      </div>
     </section>
+  `;
+}
+
+function renderOptionImages(question, optionIndex) {
+  if (question.figure) return "";
+  const optionImages = question.optionImageUrls?.[optionIndex];
+  const images = Array.isArray(optionImages) ? optionImages : optionImages ? [optionImages] : [];
+  if (!images.length) return "";
+  return `
+    <span class="option-image-grid">
+      ${images
+        .map(
+          (imageUrl, imageIndex) => `<img src="${escapeHtml(imageUrl)}" alt="${question.number}번 ${optionIndex + 1}번 보기 그림 ${imageIndex + 1}" loading="lazy" referrerpolicy="no-referrer" />`,
+        )
+        .join("")}
+    </span>
   `;
 }
 

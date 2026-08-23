@@ -6,6 +6,7 @@ const projectRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const publicDirectory = join(projectRoot, "public");
 const scriptPaths = [
   "data/exam-catalog.js",
+  "data/exam-archive.js",
   "data/exam-2022-1.js",
   "data/exam-explanations-2022-1.js",
   "app.js",

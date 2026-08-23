@@ -60,8 +60,8 @@ export default function Home() {
           <section className="content" id="app" tabIndex={-1}></section>
 
           <footer className="footer">
-            <span>2022년 1회 기출 문항·정답을 학습용 CBT로 구성하고, 해설은 이 페이지를 위해 새로 작성했습니다.</span>
-            <a href="https://www.comcbt.com/xe/webhaesul/10056270" target="_blank" rel="noreferrer">기출 회차 출처</a>
+            <span>2003~2022년 59개 회차 문항·정답을 CBT로 구성했습니다. 2022년 1회 상세 해설은 이 페이지를 위해 새로 작성했습니다.</span>
+            <a href="https://www.comcbt.com/xe/dy" target="_blank" rel="noreferrer">COMCBT 도시계획기사 출처</a>
             <a href="https://www.q-net.or.kr/crf005.do?id=crf00503&jmCd=1350" target="_blank" rel="noreferrer">최신 시험정보 확인</a>
           </footer>
         </main>
