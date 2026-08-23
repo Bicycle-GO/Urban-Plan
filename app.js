@@ -796,6 +796,7 @@ let state = loadState();
 activateExam(state.selectedExamId);
 state.selectedExamId = activeExam.id;
 let quizTimerIntervalId = null;
+let compactViewport = window.matchMedia("(max-width: 780px)").matches;
 
 const app = document.querySelector("#app");
 const pageTitle = document.querySelector("#pageTitle");
@@ -829,6 +830,12 @@ resetProgress.addEventListener("click", () => {
 });
 
 window.addEventListener("resize", debounce(() => {
+  const nextCompactViewport = window.matchMedia("(max-width: 780px)").matches;
+  if (nextCompactViewport !== compactViewport) {
+    compactViewport = nextCompactViewport;
+    render();
+    return;
+  }
   drawCityCanvas();
   drawPlanCanvas("planCanvas");
 }, 120));
@@ -1241,6 +1248,7 @@ function renderCbtQuiz() {
   const archiveCount = examCatalog.length || 59;
   const currentBookmarks = writtenQuestions.filter((item) => state.bookmarks.includes(item.id)).length;
   const hasDetailedExplanations = activeExam.id === "15428";
+  const isCompactLayout = compactViewport;
 
   return `
     <div class="stack cbt-page">
@@ -1316,7 +1324,8 @@ function renderCbtQuiz() {
               ${Number.isFinite(question.accuracy) ? `<span class="tag blue">당시 정답률 ${question.accuracy}%</span>` : ""}
             </div>
             <button class="bookmark-button ${isBookmarked ? "is-active" : ""}" id="toggleBookmark" type="button" aria-pressed="${isBookmarked}">
-              <span aria-hidden="true">${isBookmarked ? "★" : "☆"}</span> ${isBookmarked ? "북마크됨" : "북마크"}
+              <span aria-hidden="true">${isBookmarked ? "★" : "☆"}</span>
+              <span class="bookmark-text">${isBookmarked ? "북마크됨" : "북마크"}</span>
             </button>
           </div>
 
@@ -1402,10 +1411,10 @@ function renderCbtQuiz() {
             </div>
           </div>
 
-          <details class="surface palette-panel" open>
+          <details class="surface palette-panel" ${isCompactLayout ? "" : "open"}>
             <summary>
               <span>문항 번호판</span>
-              <small>클릭해서 이동</small>
+              <small>${isCompactLayout ? "펼쳐서 이동" : "클릭해서 이동"}</small>
             </summary>
             <div class="palette-legend" aria-label="번호판 범례">
               <span><i class="legend-dot answered"></i>풀이</span>
