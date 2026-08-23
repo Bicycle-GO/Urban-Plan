@@ -1,4 +1,5 @@
-const STORAGE_KEY = "urban-plan-exam-study-v1";
+const STORAGE_KEY = "urban-plan-exam-study-v2";
+const EXAM_DURATION_SECONDS = 150 * 60;
 
 const subjects = [
   {
@@ -243,7 +244,7 @@ const subjects = [
   },
 ];
 
-const writtenQuestions = [
+const sampleWrittenQuestions = [
   {
     id: "w01",
     subject: "planning",
@@ -437,6 +438,34 @@ const writtenQuestions = [
     takeaway: "법규는 체계 표와 최신 공고 확인이 점수 방어의 핵심입니다.",
   },
 ];
+
+const activeExam = window.URBAN_PLAN_EXAM_2022_1 || {
+  id: "15428",
+  title: "도시계획기사 필기 2022년 제1회",
+  durationMinutes: 150,
+  questions: sampleWrittenQuestions,
+};
+const examCatalog = window.URBAN_PLAN_EXAM_CATALOG || [];
+const examEnhancements = window.URBAN_PLAN_EXPLANATIONS_2022_1 || {};
+
+const writtenQuestions = activeExam.questions.map((question, index) => {
+  const enhancement = examEnhancements[String(question.number || index + 1)] || {};
+  const accuracy = Number.isFinite(question.accuracy) ? question.accuracy : 65;
+  const level = accuracy >= 75 ? "쉬움" : accuracy >= 55 ? "보통" : "어려움";
+  return {
+    ...question,
+    ...enhancement,
+    options: enhancement.options || question.options,
+    number: question.number || index + 1,
+    level,
+    explanation:
+      enhancement.explanation ||
+      `정답은 ${question.answer + 1}번입니다. 정답 보기의 핵심 개념을 다시 확인해 보세요.`,
+    takeaway:
+      enhancement.takeaway ||
+      `정답 보기: ${question.options[question.answer] || `${question.answer + 1}번`}`,
+  };
+});
 
 const practicalLessons = [
   {
@@ -723,19 +752,23 @@ const practicalChecklist = [
 const viewTitles = {
   dashboard: "도시계획기사 학습실",
   writtenLecture: "1차 필기 기본강의",
-  writtenQuiz: "1차 필기 기출풀이",
+  writtenQuiz: "도시계획기사 기출 CBT",
   practicalLecture: "3차 실기 기본강의",
   practicalQuiz: "3차 실기 기출유형",
   finalLab: "실전 연습실",
 };
 
 const defaultState = {
-  view: "dashboard",
+  view: "writtenQuiz",
   selectedSubject: "planning",
   quizSubject: "all",
   quizIndex: 0,
   answers: {},
   revealed: {},
+  bookmarks: [],
+  examSubmitted: false,
+  timerEnd: null,
+  timerRemaining: EXAM_DURATION_SECONDS,
   practicalRevealed: {},
   lectureDone: [],
   plannerDone: [],
@@ -744,6 +777,7 @@ const defaultState = {
 };
 
 let state = loadState();
+let quizTimerIntervalId = null;
 
 const app = document.querySelector("#app");
 const pageTitle = document.querySelector("#pageTitle");
@@ -771,7 +805,7 @@ menuButton.addEventListener("click", () => {
 resetProgress.addEventListener("click", () => {
   const confirmed = window.confirm("저장된 진도와 풀이 기록을 모두 초기화할까요?");
   if (!confirmed) return;
-  state = { ...defaultState };
+  state = createDefaultState();
   saveState();
   render();
 });
@@ -786,10 +820,14 @@ render();
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    return { ...defaultState, ...saved };
+    return { ...createDefaultState(), ...saved };
   } catch {
-    return { ...defaultState };
+    return createDefaultState();
   }
+}
+
+function createDefaultState() {
+  return JSON.parse(JSON.stringify(defaultState));
 }
 
 function saveState() {
@@ -805,6 +843,8 @@ function setView(view) {
 }
 
 function render() {
+  window.clearInterval(quizTimerIntervalId);
+  quizTimerIntervalId = null;
   pageTitle.textContent = viewTitles[state.view] || viewTitles.dashboard;
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.toggle("is-active", item.dataset.view === state.view);
@@ -813,7 +853,7 @@ function render() {
   const renderers = {
     dashboard: renderDashboard,
     writtenLecture: renderWrittenLecture,
-    writtenQuiz: renderWrittenQuiz,
+    writtenQuiz: renderCbtQuiz,
     practicalLecture: renderPracticalLecture,
     practicalQuiz: renderPracticalQuiz,
     finalLab: renderFinalLab,
@@ -828,9 +868,10 @@ function render() {
 }
 
 function bindCurrentView() {
+  app.onkeydown = null;
   if (state.view === "dashboard") bindDashboard();
   if (state.view === "writtenLecture") bindWrittenLecture();
-  if (state.view === "writtenQuiz") bindWrittenQuiz();
+  if (state.view === "writtenQuiz") bindCbtQuiz();
   if (state.view === "practicalLecture") bindPracticalLecture();
   if (state.view === "practicalQuiz") bindPracticalQuiz();
   if (state.view === "finalLab") bindFinalLab();
@@ -843,8 +884,8 @@ function renderDashboard() {
       <section class="hero-grid">
         <div class="surface padded hero-copy">
           <span class="eyebrow">합격 흐름 설계</span>
-          <h2>필기 개념을 점수로, 실기 도면을 답안으로 바꾸는 학습실</h2>
-          <p>필기 5과목 기본강의, 기출 빈출유형 풀이, 실기 계산형과 도면형 연습을 한 곳에 묶었습니다. 오늘은 약한 과목을 하나 고르고, 문제를 풀고, 실기 체크리스트를 한 번 확인하면 충분히 앞으로 갑니다.</p>
+          <h2>100문항을 실전처럼 풀고, 근거까지 이해하는 학습실</h2>
+          <p>2022년 1회 도시계획기사 필기 전 문항을 CBT 흐름으로 구성했습니다. 번호판에서 풀이 상태를 확인하고, 채점 뒤에는 과목별 점수와 새로 작성한 핵심 해설을 함께 복습할 수 있습니다.</p>
           <div class="hero-meta">
             <div class="metric">
               <span>필기 구조</span>
@@ -867,8 +908,8 @@ function renderDashboard() {
             </div>
           </div>
           <div class="button-row" style="margin-top:22px">
-            <button class="primary-button" data-go="writtenLecture" type="button">필기 기본강의 시작</button>
-            <button class="secondary-button" data-go="writtenQuiz" type="button">기출유형 바로 풀기</button>
+            <button class="primary-button" data-go="writtenQuiz" type="button">2022년 기출 CBT 시작</button>
+            <button class="secondary-button" data-go="writtenLecture" type="button">필기 기본강의 보기</button>
             <button class="ghost-button" data-go="practicalQuiz" type="button">실기 문제 확인</button>
           </div>
         </div>
@@ -1161,6 +1202,447 @@ function bindWrittenQuiz() {
     saveState();
     render();
   });
+}
+
+function renderCbtQuiz() {
+  const filtered = getFilteredQuestions();
+  const question = filtered[state.quizIndex] || filtered[0];
+  const totalStats = getQuizStats(writtenQuestions);
+  const filteredStats = getQuizStats(filtered);
+  const examResult = getExamResult();
+
+  if (!question) {
+    return `<div class="empty">시험 데이터를 불러오지 못했습니다. 페이지를 새로고침해 주세요.</div>`;
+  }
+
+  const selectedAnswer = state.answers[question.id];
+  const revealed = state.examSubmitted || Boolean(state.revealed[question.id]);
+  const isBookmarked = state.bookmarks.includes(question.id);
+  const remaining = getTimerRemainingSeconds();
+  const answeredPercent = Math.round((totalStats.answered / writtenQuestions.length) * 100);
+  const archiveCount = examCatalog.length || 59;
+
+  return `
+    <div class="stack cbt-page">
+      <section class="surface cbt-hero">
+        <div class="cbt-hero-copy">
+          <span class="eyebrow">2022년 1회 · 실제 기출</span>
+          <h2>${escapeHtml(activeExam.title)}</h2>
+          <p>한 화면에 한 문제씩 풀고, 100문항 번호판에서 미풀이·오답·북마크 상태를 바로 확인하세요. 해설은 원 사이트의 이용자 해설을 옮기지 않고 이 학습실을 위해 새로 작성했습니다.</p>
+          <div class="exam-facts" aria-label="시험 정보">
+            <span><strong>${writtenQuestions.length}</strong>문항</span>
+            <span><strong>${subjects.length}</strong>과목</span>
+            <span><strong>${activeExam.durationMinutes || 150}</strong>분</span>
+            <span>출처 목록 <strong>${archiveCount}</strong>회</span>
+          </div>
+        </div>
+        <div class="cbt-session-panel">
+          <span class="session-label">남은 시간</span>
+          <strong class="timer-display" id="examTimer" aria-live="polite">${formatTimer(remaining)}</strong>
+          <div class="button-row compact-buttons">
+            <button class="secondary-button" id="timerToggle" type="button" ${remaining <= 0 || state.examSubmitted ? "disabled" : ""}>
+              ${state.timerEnd ? "일시정지" : remaining === EXAM_DURATION_SECONDS ? "타이머 시작" : "계속"}
+            </button>
+            <button class="ghost-button" id="timerReset" type="button" ${state.examSubmitted ? "disabled" : ""}>시간 초기화</button>
+          </div>
+          <button class="primary-button submit-exam-button" id="submitExam" type="button" ${state.examSubmitted ? "disabled" : ""}>시험 채점하기</button>
+        </div>
+      </section>
+
+      ${state.examSubmitted ? renderExamResult(examResult) : ""}
+
+      <section class="surface quiz-toolbar">
+        <div>
+          <span class="eyebrow">과목 바로가기</span>
+          <div class="button-row filter-row" aria-label="과목 필터">
+            <button class="chip-button ${state.quizSubject === "all" ? "is-selected" : ""}" data-filter="all" type="button">전체 100</button>
+            ${subjects
+              .map(
+                (subject) => `
+                  <button class="chip-button ${state.quizSubject === subject.id ? "is-selected" : ""}" data-filter="${subject.id}" type="button">${subject.title}</button>
+                `,
+              )
+              .join("")}
+          </div>
+        </div>
+        <div class="toolbar-progress" aria-label="전체 풀이 진도 ${totalStats.answered}문항">
+          <div class="progress-label">
+            <span>전체 풀이</span>
+            <strong>${totalStats.answered} / ${writtenQuestions.length}</strong>
+          </div>
+          <div class="progress-line"><div class="progress-bar" style="width:${answeredPercent}%"></div></div>
+        </div>
+      </section>
+
+      <section class="cbt-layout">
+        <article class="surface question-panel">
+          <div class="question-topline">
+            <div class="quiz-meta">
+              <span class="tag">${escapeHtml(getSubjectTitle(question.subject))}</span>
+              <span class="tag ${question.level === "어려움" ? "coral" : "amber"}">${question.level}</span>
+              ${Number.isFinite(question.accuracy) ? `<span class="tag blue">당시 정답률 ${question.accuracy}%</span>` : ""}
+            </div>
+            <button class="bookmark-button ${isBookmarked ? "is-active" : ""}" id="toggleBookmark" type="button" aria-pressed="${isBookmarked}">
+              <span aria-hidden="true">${isBookmarked ? "★" : "☆"}</span> ${isBookmarked ? "북마크됨" : "북마크"}
+            </button>
+          </div>
+
+          <div class="question-heading">
+            <span class="question-number">Q${String(question.number).padStart(2, "0")}</span>
+            <h2 class="question-title">${escapeHtml(question.question)}</h2>
+          </div>
+
+          ${renderQuestionFigure(question)}
+
+          <div class="option-list" role="group" aria-label="${question.number}번 문제 보기">
+            ${question.options
+              .map((option, index) => {
+                const classes = ["option-button"];
+                if (selectedAnswer === index) classes.push("is-picked");
+                if (revealed && index === question.answer) classes.push("is-correct");
+                if (revealed && selectedAnswer === index && selectedAnswer !== question.answer) classes.push("is-wrong");
+                return `
+                  <button class="${classes.join(" ")}" data-option="${index}" type="button" aria-pressed="${selectedAnswer === index}" ${state.examSubmitted ? "disabled" : ""}>
+                    <span class="option-index" aria-hidden="true">${index + 1}</span>
+                    <span>${escapeHtml(option || `선택지 ${index + 1}`)}</span>
+                  </button>
+                `;
+              })
+              .join("")}
+          </div>
+
+          <section class="answer-box answer-explanation ${revealed ? "is-visible" : ""}" aria-live="polite">
+            <div class="answer-heading">
+              <span class="answer-status ${selectedAnswer === question.answer ? "is-correct" : ""}">
+                ${
+                  selectedAnswer === undefined
+                    ? `정답 ${question.answer + 1}번`
+                    : selectedAnswer === question.answer
+                      ? "정답입니다"
+                      : `오답 · 정답 ${question.answer + 1}번`
+                }
+              </span>
+              <strong>${escapeHtml(question.options[question.answer])}</strong>
+            </div>
+            <div class="explanation-grid">
+              <div>
+                <span class="explanation-label">왜 정답일까요?</span>
+                <p>${escapeHtml(question.explanation)}</p>
+              </div>
+              <div class="takeaway-card">
+                <span class="explanation-label">한 줄 암기</span>
+                <p>${escapeHtml(question.takeaway)}</p>
+              </div>
+            </div>
+            ${question.subject === "law" ? `<p class="law-note">법규 문항은 2022년 출제 기준입니다. 현재 조문과 달라질 수 있으므로 최신 법령을 함께 확인하세요.</p>` : ""}
+            <a class="source-link" href="${question.sourceUrl || activeExam.sourceUrl}" target="_blank" rel="noreferrer">원문 문항 확인</a>
+          </section>
+
+          <div class="question-actions">
+            <div class="button-row">
+              <button class="secondary-button" id="prevQuestion" type="button">← 이전</button>
+              <button class="secondary-button" id="nextQuestion" type="button">다음 →</button>
+            </div>
+            ${state.examSubmitted ? "" : `<button class="primary-button" id="revealAnswer" type="button">${revealed ? "해설 펼쳐짐" : "정답 · 해설 확인"}</button>`}
+          </div>
+        </article>
+
+        <aside class="cbt-sidebar">
+          <div class="surface stat-card compact-stat-card">
+            <div class="stat-card-heading">
+              <div>
+                <span class="eyebrow">현재 과목</span>
+                <h3>${state.quizSubject === "all" ? "전체 문항" : getSubjectTitle(state.quizSubject)}</h3>
+              </div>
+              <span class="current-position">${state.quizIndex + 1}/${filtered.length}</span>
+            </div>
+            <div class="mini-list">
+              <div class="mini-item"><span>푼 문제</span><strong>${filteredStats.answered}/${filteredStats.total}</strong></div>
+              <div class="mini-item"><span>현재 정답</span><strong>${filteredStats.correct}</strong></div>
+              <div class="mini-item"><span>북마크</span><strong>${state.bookmarks.length}</strong></div>
+            </div>
+          </div>
+
+          <details class="surface palette-panel" open>
+            <summary>
+              <span>문항 번호판</span>
+              <small>클릭해서 이동</small>
+            </summary>
+            <div class="palette-legend" aria-label="번호판 범례">
+              <span><i class="legend-dot answered"></i>풀이</span>
+              <span><i class="legend-dot current"></i>현재</span>
+              <span><i class="legend-dot bookmarked"></i>북마크</span>
+            </div>
+            <div class="palette-groups">
+              ${subjects
+                .map((subject, subjectIndex) => {
+                  const groupQuestions = writtenQuestions.filter((item) => item.subject === subject.id);
+                  return `
+                    <div class="palette-group">
+                      <div class="palette-group-title"><span>${subjectIndex + 1}과목</span><strong>${subject.title}</strong></div>
+                      <div class="question-palette">
+                        ${groupQuestions
+                          .map((item) => {
+                            const selected = state.answers[item.id];
+                            const itemRevealed = state.examSubmitted || Boolean(state.revealed[item.id]);
+                            const classes = ["palette-number"];
+                            if (selected !== undefined) classes.push("is-answered");
+                            if (item.id === question.id) classes.push("is-current");
+                            if (state.bookmarks.includes(item.id)) classes.push("is-bookmarked");
+                            if (itemRevealed && selected === item.answer) classes.push("is-correct");
+                            if (itemRevealed && selected !== undefined && selected !== item.answer) classes.push("is-wrong");
+                            return `<button class="${classes.join(" ")}" data-jump-question="${item.number}" type="button" ${item.id === question.id ? 'aria-current="true"' : ""} title="${item.number}번${state.bookmarks.includes(item.id) ? " · 북마크" : ""}">${item.number}${state.bookmarks.includes(item.id) ? '<span aria-hidden="true">★</span>' : ""}</button>`;
+                          })
+                          .join("")}
+                      </div>
+                    </div>
+                  `;
+                })
+                .join("")}
+            </div>
+          </details>
+
+          <div class="surface keyboard-card">
+            <strong>키보드로 빠르게</strong>
+            <p><kbd>1</kbd>–<kbd>4</kbd> 답 선택 · <kbd>←</kbd><kbd>→</kbd> 이동 · <kbd>B</kbd> 북마크</p>
+          </div>
+        </aside>
+      </section>
+    </div>
+  `;
+}
+
+function bindCbtQuiz() {
+  app.querySelectorAll("[data-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.quizSubject = button.dataset.filter;
+      state.quizIndex = 0;
+      saveState();
+      render();
+    });
+  });
+
+  app.querySelectorAll("[data-option]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (state.examSubmitted) return;
+      const question = getFilteredQuestions()[state.quizIndex];
+      state.answers[question.id] = Number(button.dataset.option);
+      saveState();
+      render();
+    });
+  });
+
+  app.querySelector("#revealAnswer")?.addEventListener("click", () => {
+    const question = getFilteredQuestions()[state.quizIndex];
+    state.revealed[question.id] = true;
+    saveState();
+    render();
+  });
+
+  app.querySelector("#prevQuestion")?.addEventListener("click", () => moveQuizQuestion(-1));
+  app.querySelector("#nextQuestion")?.addEventListener("click", () => moveQuizQuestion(1));
+
+  app.querySelector("#toggleBookmark")?.addEventListener("click", () => {
+    const question = getFilteredQuestions()[state.quizIndex];
+    toggleArrayValue(state.bookmarks, question.id);
+    saveState();
+    render();
+  });
+
+  app.querySelectorAll("[data-jump-question]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const number = Number(button.dataset.jumpQuestion);
+      state.quizSubject = "all";
+      state.quizIndex = Math.max(0, writtenQuestions.findIndex((question) => question.number === number));
+      saveState();
+      render();
+    });
+  });
+
+  app.querySelector("#submitExam")?.addEventListener("click", () => {
+    const stats = getQuizStats(writtenQuestions);
+    const unanswered = writtenQuestions.length - stats.answered;
+    if (unanswered > 0 && !window.confirm(`아직 ${unanswered}문항을 풀지 않았습니다. 지금 채점할까요?`)) return;
+    pauseQuizTimer();
+    state.examSubmitted = true;
+    saveState();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  app.querySelector("#restartExam")?.addEventListener("click", () => {
+    if (!window.confirm("현재 답안과 채점 결과를 지우고 처음부터 다시 풀까요?")) return;
+    state.answers = {};
+    state.revealed = {};
+    state.bookmarks = [];
+    state.examSubmitted = false;
+    state.quizSubject = "all";
+    state.quizIndex = 0;
+    state.timerEnd = null;
+    state.timerRemaining = EXAM_DURATION_SECONDS;
+    saveState();
+    render();
+  });
+
+  app.querySelector("#timerToggle")?.addEventListener("click", () => {
+    if (state.timerEnd) {
+      pauseQuizTimer();
+    } else {
+      const remaining = getTimerRemainingSeconds();
+      if (remaining <= 0) return;
+      state.timerEnd = Date.now() + remaining * 1000;
+    }
+    saveState();
+    render();
+  });
+
+  app.querySelector("#timerReset")?.addEventListener("click", () => {
+    state.timerEnd = null;
+    state.timerRemaining = EXAM_DURATION_SECONDS;
+    saveState();
+    render();
+  });
+
+  app.onkeydown = (event) => {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.target.closest("input, textarea, select")) return;
+
+    if (["1", "2", "3", "4"].includes(event.key) && !state.examSubmitted) {
+      event.preventDefault();
+      app.querySelector(`[data-option="${Number(event.key) - 1}"]`)?.click();
+    }
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveQuizQuestion(-1);
+    }
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveQuizQuestion(1);
+    }
+    if (event.key.toLowerCase() === "b") {
+      event.preventDefault();
+      app.querySelector("#toggleBookmark")?.click();
+    }
+  };
+
+  if (state.timerEnd && !state.examSubmitted) startQuizTimerTicker();
+}
+
+function moveQuizQuestion(direction) {
+  const total = getFilteredQuestions().length;
+  state.quizIndex = (state.quizIndex + direction + total) % total;
+  saveState();
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderQuestionFigure(question) {
+  if (!question.figure) return "";
+  return `
+    <section class="question-figure" aria-label="문제 자료">
+      <span class="explanation-label">문제 자료</span>
+      <div class="figure-content">${question.figure}</div>
+    </section>
+  `;
+}
+
+function getExamResult() {
+  const subjectResults = subjects.map((subject) => {
+    const questions = writtenQuestions.filter((question) => question.subject === subject.id);
+    const stats = getQuizStats(questions);
+    return {
+      ...stats,
+      id: subject.id,
+      title: subject.title,
+      score: Math.round((stats.correct / questions.length) * 100),
+    };
+  });
+  const totalStats = getQuizStats(writtenQuestions);
+  const score = Math.round((totalStats.correct / writtenQuestions.length) * 100);
+  return {
+    ...totalStats,
+    score,
+    subjectResults,
+    passed: score >= 60 && subjectResults.every((subject) => subject.score >= 40),
+  };
+}
+
+function renderExamResult(result) {
+  return `
+    <section class="surface result-panel ${result.passed ? "is-passed" : "is-review"}">
+      <div class="result-summary">
+        <div>
+          <span class="eyebrow">채점 완료</span>
+          <h2>${result.passed ? "합격 기준을 충족했습니다" : "오답 복습이 필요합니다"}</h2>
+          <p>평균 60점 이상, 모든 과목 40점 이상을 기준으로 계산한 연습 결과입니다.</p>
+        </div>
+        <div class="score-ring" aria-label="총점 ${result.score}점">
+          <strong>${result.score}</strong><span>점</span>
+        </div>
+      </div>
+      <div class="subject-score-grid">
+        ${result.subjectResults
+          .map(
+            (subject, index) => `
+              <div class="subject-score ${subject.score < 40 ? "is-fail" : ""}">
+                <span>${index + 1}과목</span>
+                <strong>${subject.score}점</strong>
+                <small>${subject.correct}/${subject.total} 정답</small>
+              </div>
+            `,
+          )
+          .join("")}
+      </div>
+      <div class="button-row result-actions">
+        <button class="secondary-button" id="restartExam" type="button">처음부터 다시 풀기</button>
+        <button class="ghost-button" data-filter="all" type="button">전체 해설 복습</button>
+      </div>
+    </section>
+  `;
+}
+
+function getTimerRemainingSeconds() {
+  if (state.timerEnd) {
+    return Math.max(0, Math.ceil((Number(state.timerEnd) - Date.now()) / 1000));
+  }
+  return Number.isFinite(state.timerRemaining) ? state.timerRemaining : EXAM_DURATION_SECONDS;
+}
+
+function pauseQuizTimer() {
+  state.timerRemaining = getTimerRemainingSeconds();
+  state.timerEnd = null;
+  window.clearInterval(quizTimerIntervalId);
+  quizTimerIntervalId = null;
+}
+
+function formatTimer(totalSeconds) {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+  return [hours, minutes, remainder].map((value) => String(value).padStart(2, "0")).join(":");
+}
+
+function startQuizTimerTicker() {
+  const update = () => {
+    const remaining = getTimerRemainingSeconds();
+    const display = app.querySelector("#examTimer");
+    if (display) display.textContent = formatTimer(remaining);
+    if (remaining > 0) return;
+
+    state.timerEnd = null;
+    state.timerRemaining = 0;
+    saveState();
+    window.clearInterval(quizTimerIntervalId);
+    quizTimerIntervalId = null;
+    const toggle = app.querySelector("#timerToggle");
+    if (toggle) {
+      toggle.textContent = "시간 종료";
+      toggle.disabled = true;
+    }
+  };
+  update();
+  quizTimerIntervalId = window.setInterval(update, 1000);
 }
 
 function renderPracticalLecture() {
