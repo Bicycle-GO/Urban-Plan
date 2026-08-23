@@ -8,9 +8,9 @@
   },
   "scripts": {
     "sync-assets": "node scripts/sync-public.mjs",
-    "dev": "pnpm run sync-assets && vinext dev",
-    "build": "pnpm run sync-assets && vinext build",
-    "start": "vinext start"
+    "dev": "pnpm run sync-assets && next dev",
+    "build": "pnpm run sync-assets && next build",
+    "start": "next start"
   },
   "dependencies": {
     "next": "16.2.6",
