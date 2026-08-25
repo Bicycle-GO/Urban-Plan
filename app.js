@@ -448,30 +448,73 @@ const fallbackExam = window.URBAN_PLAN_EXAM_2022_1 || {
 const examCatalog = window.URBAN_PLAN_EXAM_CATALOG || [];
 const examArchive = window.URBAN_PLAN_EXAM_ARCHIVE || { [fallbackExam.id]: fallbackExam };
 const examEnhancements = window.URBAN_PLAN_EXPLANATIONS_2022_1 || {};
+const createQuestionExplanation =
+  window.URBAN_PLAN_CREATE_EXPLANATION ||
+  ((question) => ({
+    explanation: `기출 정답은 ${question.answer + 1}번입니다. 정답 보기의 핵심 표현을 문제에서 묻는 기준과 연결해 확인하세요.`,
+    takeaway: `정답 ${question.answer + 1}번`,
+    explanationKind: "guided",
+    explanationType: "principle",
+    sourceWarning: false,
+    historicalLaw: question.subject === "law",
+  }));
+
+function normalizeExplanationFingerprint(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function getExplanationFingerprint(question) {
+  const answerText = question.options?.[question.answer] || `image-option-${question.answer}`;
+  return `${normalizeExplanationFingerprint(question.question)}::${normalizeExplanationFingerprint(answerText)}`;
+}
+
+const expandedExplanationByFingerprint = new Map();
+for (const [index, question] of (fallbackExam.questions || []).entries()) {
+  const enhancement = examEnhancements[String(question.number || index + 1)];
+  if (!enhancement?.explanation) continue;
+  expandedExplanationByFingerprint.set(getExplanationFingerprint(question), {
+    explanation: enhancement.explanation,
+    takeaway: enhancement.takeaway,
+    explanationKind: "expanded-reused",
+  });
+}
+
 let activeExam = fallbackExam;
 let writtenQuestions = buildWrittenQuestions(activeExam);
 
 function buildWrittenQuestions(exam) {
-  const hasDetailedExplanations = exam.id === "15428";
   return exam.questions.map((question, index) => {
-    const enhancement = hasDetailedExplanations
-      ? examEnhancements[String(question.number || index + 1)] || {}
-      : {};
+    const generatedExplanation = createQuestionExplanation(question, exam);
+    const ownEnhancement =
+      exam.id === "15428" ? examEnhancements[String(question.number || index + 1)] || null : null;
+    const reusedEnhancement =
+      exam.id === "15428" ? null : expandedExplanationByFingerprint.get(getExplanationFingerprint(question));
+    const enhancement = ownEnhancement
+      ? { ...generatedExplanation, ...ownEnhancement, explanationKind: "expanded" }
+      : reusedEnhancement
+        ? { ...generatedExplanation, ...reusedEnhancement }
+        : generatedExplanation;
     const accuracy = Number.isFinite(question.accuracy) ? question.accuracy : 65;
     const level = accuracy >= 75 ? "쉬움" : accuracy >= 55 ? "보통" : "어려움";
-    const answerText = question.options[question.answer] || `${question.answer + 1}번`;
+    const finalOptions = enhancement.options || question.options;
+    const answerText =
+      finalOptions[question.answer] ||
+      (question.optionImageUrls?.[question.answer]?.length
+        ? `정답 보기 이미지(${question.answer + 1}번)`
+        : `${question.answer + 1}번 보기`);
     return {
       ...question,
       ...enhancement,
-      options: enhancement.options || question.options,
+      options: finalOptions,
       optionImageUrls: enhancement.options ? [] : question.optionImageUrls,
       questionImageUrls: enhancement.figure ? [] : question.questionImageUrls,
       number: question.number || index + 1,
       level,
       hasDetailedExplanation: Boolean(enhancement.explanation),
+      answerDisplay: answerText,
       explanation:
         enhancement.explanation ||
-        `정답은 ${question.answer + 1}번입니다. 이 회차는 정답 확인용으로 제공되며 상세 해설은 준비 중입니다.`,
+        `기출 정답은 ${question.answer + 1}번입니다. 문제의 핵심 조건과 정답 보기를 연결해 확인하세요.`,
       takeaway: enhancement.takeaway || `정답 보기: ${answerText}`,
     };
   });
@@ -910,7 +953,7 @@ function renderDashboard() {
         <div class="surface padded hero-copy">
           <span class="eyebrow">합격 흐름 설계</span>
           <h2>59개 회차를 실전처럼 풀고, 정답까지 바로 확인하는 학습실</h2>
-          <p>COMCBT 도시계획기사 자료의 2003년부터 2022년까지 59개 회차를 회차 선택형 CBT로 구성했습니다. 2022년 1회는 새로 작성한 상세 해설까지 함께 복습할 수 있습니다.</p>
+          <p>COMCBT 도시계획기사 자료의 2003년부터 2022년까지 59개 회차를 회차 선택형 CBT로 구성했습니다. 전체 5,900문항에 이 학습실에서 독립 작성한 이해 중심 해설과 한 줄 암기를 연결했습니다.</p>
           <div class="hero-meta">
             <div class="metric">
               <span>필기 구조</span>
@@ -1247,8 +1290,9 @@ function renderCbtQuiz() {
   const answeredPercent = Math.round((totalStats.answered / writtenQuestions.length) * 100);
   const archiveCount = examCatalog.length || 59;
   const currentBookmarks = writtenQuestions.filter((item) => state.bookmarks.includes(item.id)).length;
-  const hasDetailedExplanations = activeExam.id === "15428";
+  const hasExpandedExplanations = activeExam.id === "15428";
   const isCompactLayout = compactViewport;
+  const examYear = String(activeExam.date || activeExam.title || "출제 당시").match(/\d{4}/)?.[0] || "출제 당시";
 
   return `
     <div class="stack cbt-page">
@@ -1269,11 +1313,12 @@ function renderCbtQuiz() {
           </div>
           <span class="eyebrow">${escapeHtml(activeExam.date || "2022-03-05")} · 실제 기출</span>
           <h2>${escapeHtml(activeExam.title)}</h2>
-          <p>한 화면에 한 문제씩 풀고, 100문항 번호판에서 미풀이·오답·북마크 상태를 바로 확인하세요. ${hasDetailedExplanations ? "이 회차의 상세 해설은 원 사이트 이용자 해설을 옮기지 않고 이 학습실을 위해 새로 작성했습니다." : "이 회차는 문항·정답과 원문 링크를 제공하며 상세 해설은 순차적으로 보강합니다."}</p>
+          <p>한 화면에 한 문제씩 풀고, 미풀이·오답·북마크 상태를 바로 확인하세요. 모든 문항에 원 사이트 이용자 해설을 옮기지 않고 이 학습실에서 독립 작성한 이해 중심 해설과 한 줄 암기를 연결했습니다.${hasExpandedExplanations ? " 이 회차는 계산 과정과 오답 구별까지 상세하게 보강했습니다." : ""}</p>
           <div class="exam-facts" aria-label="시험 정보">
             <span><strong>${writtenQuestions.length}</strong>문항</span>
             <span><strong>${subjects.length}</strong>과목</span>
             <span><strong>${activeExam.durationMinutes || 150}</strong>분</span>
+            <span>해설 <strong>${writtenQuestions.length}</strong>개</span>
             <span>출처 목록 <strong>${archiveCount}</strong>회</span>
           </div>
         </div>
@@ -1367,11 +1412,16 @@ function renderCbtQuiz() {
                       : `오답 · 정답 ${question.answer + 1}번`
                 }
               </span>
-              <strong>${escapeHtml(question.options[question.answer] || `${question.answer + 1}번 보기`)}</strong>
+              <strong>${escapeHtml(question.answerDisplay || `${question.answer + 1}번 보기`)}</strong>
             </div>
+            ${
+              question.sourceWarning
+                ? `<p class="source-warning"><strong>원문 오류·복원 주의</strong><span>수록된 기출 답안을 기준으로 안내합니다. 확정적인 계산식이나 법령 기준으로 사용하지 말고 원문을 함께 확인하세요.</span></p>`
+                : ""
+            }
             <div class="explanation-grid">
               <div>
-                <span class="explanation-label">${question.hasDetailedExplanation ? "왜 정답일까요?" : "정답 안내"}</span>
+                <span class="explanation-label">${question.sourceWarning ? "참고 해설" : String(question.explanationKind || "").startsWith("expanded") ? "왜 정답일까요?" : "핵심 풀이"}</span>
                 <p>${escapeHtml(question.explanation)}</p>
               </div>
               <div class="takeaway-card">
@@ -1379,7 +1429,7 @@ function renderCbtQuiz() {
                 <p>${escapeHtml(question.takeaway)}</p>
               </div>
             </div>
-            ${question.subject === "law" ? `<p class="law-note">법규 문항은 2022년 출제 기준입니다. 현재 조문과 달라질 수 있으므로 최신 법령을 함께 확인하세요.</p>` : ""}
+            ${question.historicalLaw ? `<p class="law-note">이 법규 관련 문항은 ${examYear}년 출제 당시 기준입니다. 현재 조문과 다를 수 있으므로 최신 법령을 함께 확인하세요.</p>` : ""}
             <div class="source-links">
               <a class="source-link" href="${question.sourceUrl || activeExam.sourceUrl}" target="_blank" rel="noreferrer">COMCBT 원문 문항 확인</a>
               <a class="source-link" href="${activeExam.sourceArticleUrl || activeExam.sourceIndexUrl || "https://www.comcbt.com/xe/dy"}" target="_blank" rel="noreferrer">회차 자료 페이지 확인</a>

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "sync-assets": "node scripts/sync-public.mjs",
+    "audit-explanations": "node scripts/validate-explanations.mjs",
     "dev": "pnpm run sync-assets && next dev",
     "build": "pnpm run sync-assets && next build",
     "start": "next start"
