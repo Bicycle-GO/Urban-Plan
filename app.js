@@ -448,6 +448,27 @@ const fallbackExam = window.URBAN_PLAN_EXAM_2022_1 || {
 const examCatalog = window.URBAN_PLAN_EXAM_CATALOG || [];
 const examArchive = window.URBAN_PLAN_EXAM_ARCHIVE || { [fallbackExam.id]: fallbackExam };
 const examEnhancements = window.URBAN_PLAN_EXPLANATIONS_2022_1 || {};
+const detailedExamEnhancements = window.URBAN_PLAN_DETAILED_EXPLANATIONS || {};
+const detailedCoverageExams = Object.values(examArchive).filter((exam) => String(exam.id) !== "15428");
+const expectedDetailedCount = detailedCoverageExams.reduce(
+  (total, exam) => total + exam.questions.length,
+  0,
+);
+const actualDetailedCount = detailedCoverageExams.reduce(
+  (total, exam) => total + Object.keys(detailedExamEnhancements[String(exam.id)] || {}).length,
+  0,
+);
+const hasCompleteExplanationCoverage =
+  actualDetailedCount === expectedDetailedCount &&
+  detailedCoverageExams.every((exam) =>
+    exam.questions.every(
+      (question, index) =>
+        detailedExamEnhancements[String(exam.id)]?.[String(question.number || index + 1)]?.explanation,
+    ),
+  ) &&
+  fallbackExam.questions.every(
+    (question, index) => examEnhancements[String(question.number || index + 1)]?.explanation,
+  );
 const createQuestionExplanation =
   window.URBAN_PLAN_CREATE_EXPLANATION ||
   ((question) => ({
@@ -458,9 +479,19 @@ const createQuestionExplanation =
     sourceWarning: false,
     historicalLaw: question.subject === "law",
   }));
+const hasSourceCaution =
+  window.URBAN_PLAN_HAS_SOURCE_CAUTION ||
+  ((question) =>
+    /오류 신고|복원 오류|정답과 해설을 확인|문제 오류|관련 규정 개정전|기존 정답|가답안|모두\s*정답|전항\s*정답/.test(
+      String(question?.question || ""),
+    ));
 
 function normalizeExplanationFingerprint(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || "")
+    .normalize("NFKC")
+    .replace(/\((?:관련 규정|오류 신고|문제 복원|문제 오류)[^)]*\)/g, "")
+    .replace(/[ㆍᆞ]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, "");
 }
 
 function getExplanationFingerprint(question) {
@@ -487,13 +518,22 @@ function buildWrittenQuestions(exam) {
     const generatedExplanation = createQuestionExplanation(question, exam);
     const ownEnhancement =
       exam.id === "15428" ? examEnhancements[String(question.number || index + 1)] || null : null;
+    const authoredEnhancement =
+      detailedExamEnhancements[String(exam.id)]?.[String(question.number || index + 1)] || null;
     const reusedEnhancement =
       exam.id === "15428" ? null : expandedExplanationByFingerprint.get(getExplanationFingerprint(question));
     const enhancement = ownEnhancement
       ? { ...generatedExplanation, ...ownEnhancement, explanationKind: "expanded" }
-      : reusedEnhancement
-        ? { ...generatedExplanation, ...reusedEnhancement }
-        : generatedExplanation;
+      : authoredEnhancement
+        ? {
+            ...generatedExplanation,
+            ...authoredEnhancement,
+            explanationKind: "detailed",
+            sourceWarning: hasSourceCaution(question, authoredEnhancement),
+          }
+        : reusedEnhancement
+          ? { ...generatedExplanation, ...reusedEnhancement }
+          : generatedExplanation;
     const accuracy = Number.isFinite(question.accuracy) ? question.accuracy : 65;
     const level = accuracy >= 75 ? "쉬움" : accuracy >= 55 ? "보통" : "어려움";
     const finalOptions = enhancement.options || question.options;
@@ -913,6 +953,21 @@ function setView(view) {
 function render() {
   window.clearInterval(quizTimerIntervalId);
   quizTimerIntervalId = null;
+  if (!hasCompleteExplanationCoverage) {
+    pageTitle.textContent = "해설 데이터 확인 필요";
+    app.innerHTML = `
+      <section class="surface padded hero-copy" role="alert">
+        <span class="eyebrow">Explanation data check</span>
+        <h2>문항별 상세해설을 모두 불러오지 못했습니다.</h2>
+        <p>불완전한 공통 해설을 대신 표시하지 않도록 학습 화면을 잠시 중지했습니다. 페이지를 새로고침해 주세요. 계속되면 배포 상태를 확인해야 합니다.</p>
+        <div class="hero-meta">
+          <span>불러온 과거 해설 <strong>${actualDetailedCount.toLocaleString("ko-KR")}</strong>개</span>
+          <span>필요한 과거 해설 <strong>${expectedDetailedCount.toLocaleString("ko-KR")}</strong>개</span>
+        </div>
+      </section>
+    `;
+    return;
+  }
   pageTitle.textContent = viewTitles[state.view] || viewTitles.dashboard;
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.toggle("is-active", item.dataset.view === state.view);
@@ -953,7 +1008,7 @@ function renderDashboard() {
         <div class="surface padded hero-copy">
           <span class="eyebrow">합격 흐름 설계</span>
           <h2>59개 회차를 실전처럼 풀고, 정답까지 바로 확인하는 학습실</h2>
-          <p>COMCBT 도시계획기사 자료의 2003년부터 2022년까지 59개 회차를 회차 선택형 CBT로 구성했습니다. 전체 5,900문항에 이 학습실에서 독립 작성한 이해 중심 해설과 한 줄 암기를 연결했습니다.</p>
+          <p>COMCBT 도시계획기사 자료의 2003년부터 2022년까지 59개 회차를 회차 선택형 CBT로 구성했습니다. 전체 5,900문항마다 정답 근거와 핵심 개념을 독립적으로 작성하고, 계산·법규·오답 구별이 필요한 부분을 문항별로 풀어 설명했습니다.</p>
           <div class="hero-meta">
             <div class="metric">
               <span>필기 구조</span>
@@ -1290,7 +1345,6 @@ function renderCbtQuiz() {
   const answeredPercent = Math.round((totalStats.answered / writtenQuestions.length) * 100);
   const archiveCount = examCatalog.length || 59;
   const currentBookmarks = writtenQuestions.filter((item) => state.bookmarks.includes(item.id)).length;
-  const hasExpandedExplanations = activeExam.id === "15428";
   const isCompactLayout = compactViewport;
   const examYear = String(activeExam.date || activeExam.title || "출제 당시").match(/\d{4}/)?.[0] || "출제 당시";
 
@@ -1313,7 +1367,7 @@ function renderCbtQuiz() {
           </div>
           <span class="eyebrow">${escapeHtml(activeExam.date || "2022-03-05")} · 실제 기출</span>
           <h2>${escapeHtml(activeExam.title)}</h2>
-          <p>한 화면에 한 문제씩 풀고, 미풀이·오답·북마크 상태를 바로 확인하세요. 모든 문항에 원 사이트 이용자 해설을 옮기지 않고 이 학습실에서 독립 작성한 이해 중심 해설과 한 줄 암기를 연결했습니다.${hasExpandedExplanations ? " 이 회차는 계산 과정과 오답 구별까지 상세하게 보강했습니다." : ""}</p>
+          <p>한 화면에 한 문제씩 풀고, 미풀이·오답·북마크 상태를 바로 확인하세요. 모든 문항에 원 사이트 이용자 해설을 옮기지 않고 이 학습실에서 독립 작성한 정답 근거·오답 구별·공식과 법규 기준을 담은 상세해설과 한 줄 암기를 연결했습니다.</p>
           <div class="exam-facts" aria-label="시험 정보">
             <span><strong>${writtenQuestions.length}</strong>문항</span>
             <span><strong>${subjects.length}</strong>과목</span>
@@ -1416,12 +1470,12 @@ function renderCbtQuiz() {
             </div>
             ${
               question.sourceWarning
-                ? `<p class="source-warning"><strong>원문 오류·복원 주의</strong><span>수록된 기출 답안을 기준으로 안내합니다. 확정적인 계산식이나 법령 기준으로 사용하지 말고 원문을 함께 확인하세요.</span></p>`
+                ? `<p class="source-warning"><strong>원문·출제 기준 주의</strong><span>원문 복원, 저장 정답 또는 출제 당시 기준에 주의가 필요한 문항입니다. 아래 해설의 계산·개념 기준과 원문을 함께 확인하세요.</span></p>`
                 : ""
             }
             <div class="explanation-grid">
               <div>
-                <span class="explanation-label">${question.sourceWarning ? "참고 해설" : String(question.explanationKind || "").startsWith("expanded") ? "왜 정답일까요?" : "핵심 풀이"}</span>
+                <span class="explanation-label">${question.sourceWarning ? "참고 해설" : ["expanded", "detailed"].includes(question.explanationKind) ? "왜 정답일까요?" : "핵심 풀이"}</span>
                 <p>${escapeHtml(question.explanation)}</p>
               </div>
               <div class="takeaway-card">

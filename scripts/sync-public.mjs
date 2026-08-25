@@ -9,6 +9,7 @@ const scriptPaths = [
   "data/exam-archive.js",
   "data/exam-2022-1.js",
   "data/exam-explanations-2022-1.js",
+  "data/exam-detailed-explanations.js",
   "data/explanation-engine.js",
   "app.js",
 ];

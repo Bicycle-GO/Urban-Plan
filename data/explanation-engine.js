@@ -11,7 +11,12 @@
   const HISTORY_PATTERN = /인물|누구|학자|주장|제안|저서|헌장|최초|연도|시대|설계한\s*사람|창안/;
   const MATCHING_PATTERN = /연결|짝지|조합|모두\s*옳|모두\s*바르|관계가\s*옳|일치하는/;
   const DEFINITION_PATTERN = /용어|명칭|무엇|개념|정의|의미|설명한\s*것|해당하는\s*것/;
-  const SOURCE_WARNING_PATTERN = /오류 신고|복원 오류|그림파일이 없습니다|정답과 해설을 확인|문제 오류|복원중/;
+  const SOURCE_WARNING_PATTERN =
+    /오류 신고|복원 오류|그림파일이 없습니다|정답과 해설을 확인|문제 오류|복원중|관련 규정 개정전|개정 전 문제|기존 정답|가답안|모두\s*정답|전항\s*정답/;
+  const AUTHORED_WARNING_CONTEXT_PATTERN =
+    /원문|복원|저장\s*(?:정답|답안)|정답표|가답안|전사|데이터/;
+  const AUTHORED_WARNING_ISSUE_PATTERN =
+    /오류|오기|손상|누락|충돌|불일치|맞지|틀렸|주의|확정하기 어렵|가능성|모호|불완전|복수\s*정답|모두\s*정답|전항\s*정답/;
   const DOUBLE_NEGATIVE_PATTERN =
     /허용되지\s*않.{0,45}속하지\s*않|받지\s*않아도.{0,45}아닌|필요하지\s*않.{0,35}아닌|해당하지\s*않.{0,35}아닌|제외.{0,35}제외|금지.{0,35}아닌/;
   const LEGAL_PATTERN =
@@ -618,6 +623,16 @@
     return question.subject === "law" || LEGAL_PATTERN.test(String(question.question || ""));
   }
 
+  function hasSourceCaution(question, enhancement) {
+    if (SOURCE_WARNING_PATTERN.test(String(question?.question || ""))) return true;
+    const authoredText = `${enhancement?.explanation || ""} ${enhancement?.takeaway || ""}`;
+    if (/복수\s*정답|모두\s*정답|전항\s*정답/.test(authoredText)) return true;
+    return (
+      AUTHORED_WARNING_CONTEXT_PATTERN.test(authoredText) &&
+      AUTHORED_WARNING_ISSUE_PATTERN.test(authoredText)
+    );
+  }
+
   function createExplanation(question, exam) {
     const answerNumber = Number(question.answer) + 1;
     const rawAnswer = String(question.options?.[question.answer] || "").trim();
@@ -629,7 +644,7 @@
     const answerLead = rawAnswer
       ? `기출 정답은 ${answerNumber}번 “${answer}”입니다.`
       : `기출 정답은 ${answer}입니다.`;
-    const sourceWarning = SOURCE_WARNING_PATTERN.test(String(question.question || ""));
+    const sourceWarning = hasSourceCaution(question);
     const historicalLaw = isHistoricalLawQuestion(question);
     let explanation = "";
     let takeaway = "";
@@ -722,5 +737,6 @@
   }
 
   window.URBAN_PLAN_CREATE_EXPLANATION = createExplanation;
+  window.URBAN_PLAN_HAS_SOURCE_CAUTION = hasSourceCaution;
   window.URBAN_PLAN_EXPLANATION_ENGINE_VERSION = "2026-08-25";
 })();

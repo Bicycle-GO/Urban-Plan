@@ -7,7 +7,8 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "sync-assets": "node scripts/sync-public.mjs",
+    "build-explanations": "node scripts/build-detailed-explanations.mjs",
+    "sync-assets": "node scripts/build-detailed-explanations.mjs && node scripts/validate-explanations.mjs && node scripts/sync-public.mjs",
     "audit-explanations": "node scripts/validate-explanations.mjs",
     "dev": "pnpm run sync-assets && next dev",
     "build": "pnpm run sync-assets && next build",

@@ -60,7 +60,7 @@ export default function Home() {
           <section className="content" id="app" tabIndex={-1}></section>
 
           <footer className="footer">
-            <span>2003~2022년 59개 회차, 5,900문항 전체에 독립 작성한 이해 중심 해설과 한 줄 암기를 제공합니다.</span>
+            <span>2003~2022년 59개 회차, 5,900문항마다 정답 근거·오답 구별·계산과 법규 기준을 담은 상세해설을 제공합니다.</span>
             <a href="https://www.comcbt.com/xe/dy" target="_blank" rel="noreferrer">COMCBT 도시계획기사 출처</a>
             <a href="https://www.q-net.or.kr/crf005.do?id=crf00503&jmCd=1350" target="_blank" rel="noreferrer">최신 시험정보 확인</a>
           </footer>
