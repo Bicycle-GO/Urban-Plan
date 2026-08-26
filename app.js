@@ -449,6 +449,11 @@ const examCatalog = window.URBAN_PLAN_EXAM_CATALOG || [];
 const examArchive = window.URBAN_PLAN_EXAM_ARCHIVE || { [fallbackExam.id]: fallbackExam };
 const examEnhancements = window.URBAN_PLAN_EXPLANATIONS_2022_1 || {};
 const detailedExamEnhancements = window.URBAN_PLAN_DETAILED_EXPLANATIONS || {};
+const sharedTopicReviewData = window.URBAN_PLAN_SHARED_TOPIC_REVIEWS || { topics: {}, rules: [] };
+const sharedTopicReviewRules = (sharedTopicReviewData.rules || []).map((rule) => ({
+  topic: sharedTopicReviewData.topics?.[rule.topic] || null,
+  patterns: (rule.patterns || []).map((pattern) => new RegExp(pattern, "i")),
+}));
 const detailedCoverageExams = Object.values(examArchive).filter((exam) => String(exam.id) !== "15428");
 const expectedDetailedCount = detailedCoverageExams.reduce(
   (total, exam) => total + exam.questions.length,
@@ -486,6 +491,14 @@ const hasSourceCaution =
       String(question?.question || ""),
     ));
 
+function getSharedTopicReview(question) {
+  const questionText = String(question?.question || "");
+  const matchedRule = sharedTopicReviewRules.find(
+    (rule) => rule.topic && rule.patterns.some((pattern) => pattern.test(questionText)),
+  );
+  return matchedRule?.topic || null;
+}
+
 function normalizeExplanationFingerprint(value) {
   return String(value || "")
     .normalize("NFKC")
@@ -516,6 +529,7 @@ let writtenQuestions = buildWrittenQuestions(activeExam);
 function buildWrittenQuestions(exam) {
   return exam.questions.map((question, index) => {
     const generatedExplanation = createQuestionExplanation(question, exam);
+    const topicReview = getSharedTopicReview(question);
     const ownEnhancement =
       exam.id === "15428" ? examEnhancements[String(question.number || index + 1)] || null : null;
     const authoredEnhancement =
@@ -545,6 +559,7 @@ function buildWrittenQuestions(exam) {
     return {
       ...question,
       ...enhancement,
+      topicReview,
       options: finalOptions,
       optionImageUrls: enhancement.options ? [] : question.optionImageUrls,
       questionImageUrls: enhancement.figure ? [] : question.questionImageUrls,
@@ -1483,6 +1498,16 @@ function renderCbtQuiz() {
                 <p>${escapeHtml(question.takeaway)}</p>
               </div>
             </div>
+            ${
+              question.topicReview
+                ? `<div class="topic-review-card">
+                    <span class="explanation-label">관련 개념 정리</span>
+                    <strong>${escapeHtml(question.topicReview.title)}</strong>
+                    <p>${escapeHtml(question.topicReview.summary)}</p>
+                    <span class="topic-review-memory"><b>암기 연결</b>${escapeHtml(question.topicReview.memory)}</span>
+                  </div>`
+                : ""
+            }
             ${question.historicalLaw ? `<p class="law-note">이 법규 관련 문항은 ${examYear}년 출제 당시 기준입니다. 현재 조문과 다를 수 있으므로 최신 법령을 함께 확인하세요.</p>` : ""}
             <div class="source-links">
               <a class="source-link" href="${question.sourceUrl || activeExam.sourceUrl}" target="_blank" rel="noreferrer">COMCBT 원문 문항 확인</a>

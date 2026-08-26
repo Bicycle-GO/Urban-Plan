@@ -1227,6 +1227,53 @@ a {
   background: #fffaf0;
 }
 
+.topic-review-card {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+  border: 1px solid #bfd3e4;
+  border-radius: 10px;
+  padding: 16px;
+  background: #f4f8fc;
+}
+
+.topic-review-card .explanation-label {
+  margin-bottom: 0;
+  color: #305f7d;
+}
+
+.topic-review-card > strong {
+  color: #17384f;
+  font-size: 16px;
+}
+
+.topic-review-card > p {
+  color: #344a5a;
+  font-size: 14px;
+  line-height: 1.75;
+  white-space: pre-line;
+}
+
+.topic-review-memory {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border-top: 1px dashed #aec7da;
+  padding-top: 10px;
+  color: #24536f;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.topic-review-memory b {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 2px 7px;
+  background: #dcecf7;
+  font-size: 11px;
+}
+
 .source-warning {
   display: grid;
   gap: 4px;
@@ -2235,6 +2282,23 @@ body.sidebar-open {
 
   .takeaway-card {
     padding: 12px;
+  }
+
+  .topic-review-card {
+    gap: 8px;
+    margin-top: 11px;
+    padding: 13px;
+  }
+
+  .topic-review-card > p {
+    font-size: 14px;
+    line-height: 1.68;
+  }
+
+  .topic-review-memory {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
   }
 
   .source-links {
