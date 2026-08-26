@@ -10,6 +10,7 @@ const scriptPaths = [
   "data/exam-2022-1.js",
   "data/exam-explanations-2022-1.js",
   "data/exam-detailed-explanations.js",
+  "data/shared-topic-reviews.js",
   "data/explanation-engine.js",
   "app.js",
 ];
