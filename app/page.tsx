@@ -60,11 +60,7 @@ export default function Home() {
           <section className="content" id="app" tabIndex={-1}></section>
 
           <footer className="footer">
-<<<<<<< Updated upstream
-            <span>2003~2022년 59개 회차, 5,900문항마다 정답 근거·오답 구별·계산과 법규 기준을 담은 상세해설을 제공합니다.</span>
-=======
-            <span>2003~2022년 59개 회차 문항·정답을 CBT로 구성했습니다. 상세 해설은 이 페이지를 위해 새로 작성했습니다.</span>
->>>>>>> Stashed changes
+            <span>59개 공개 기출 회차와 2022년 4회 공유대화 보강문제에 정답 근거·오답 구별·관련 개념 해설을 제공합니다.</span>
             <a href="https://www.comcbt.com/xe/dy" target="_blank" rel="noreferrer">COMCBT 도시계획기사 출처</a>
             <a href="https://www.q-net.or.kr/crf005.do?id=crf00503&jmCd=1350" target="_blank" rel="noreferrer">최신 시험정보 확인</a>
           </footer>

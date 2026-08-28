@@ -445,9 +445,26 @@ const fallbackExam = window.URBAN_PLAN_EXAM_2022_1 || {
   durationMinutes: 150,
   questions: sampleWrittenQuestions,
 };
-const examCatalog = window.URBAN_PLAN_EXAM_CATALOG || [];
-const examArchive = window.URBAN_PLAN_EXAM_ARCHIVE || { [fallbackExam.id]: fallbackExam };
-<<<<<<< Updated upstream
+const supplementalExam = window.URBAN_PLAN_EXAM_2022_4 || null;
+const baseExamCatalog = window.URBAN_PLAN_EXAM_CATALOG || [];
+const examCatalog = supplementalExam
+  ? [
+      {
+        id: supplementalExam.id,
+        date: supplementalExam.date,
+        round: supplementalExam.round,
+        title: supplementalExam.title,
+        sourceUrl: supplementalExam.sourceArticleUrl,
+        articleUrl: supplementalExam.sourceArticleUrl,
+        available: true,
+      },
+      ...baseExamCatalog.filter((exam) => String(exam.id) !== String(supplementalExam.id)),
+    ]
+  : baseExamCatalog;
+const baseExamArchive = window.URBAN_PLAN_EXAM_ARCHIVE || { [fallbackExam.id]: fallbackExam };
+const examArchive = supplementalExam
+  ? { ...baseExamArchive, [supplementalExam.id]: supplementalExam }
+  : baseExamArchive;
 const examEnhancements = window.URBAN_PLAN_EXPLANATIONS_2022_1 || {};
 const detailedExamEnhancements = window.URBAN_PLAN_DETAILED_EXPLANATIONS || {};
 const sharedTopicReviewData = window.URBAN_PLAN_SHARED_TOPIC_REVIEWS || { topics: {}, rules: [] };
@@ -455,7 +472,9 @@ const sharedTopicReviewRules = (sharedTopicReviewData.rules || []).map((rule) =>
   topic: sharedTopicReviewData.topics?.[rule.topic] || null,
   patterns: (rule.patterns || []).map((pattern) => new RegExp(pattern, "i")),
 }));
-const detailedCoverageExams = Object.values(examArchive).filter((exam) => String(exam.id) !== "15428");
+const detailedCoverageExams = Object.values(examArchive).filter(
+  (exam) => String(exam.id) !== "15428" && !exam.isSupplemental,
+);
 const expectedDetailedCount = detailedCoverageExams.reduce(
   (total, exam) => total + exam.questions.length,
   0,
@@ -523,28 +542,31 @@ for (const [index, question] of (fallbackExam.questions || []).entries()) {
     explanationKind: "expanded-reused",
   });
 }
-
-=======
-const examEnhancementsByExam = {
-  "15428": window.URBAN_PLAN_EXPLANATIONS_2022_1 || {},
-  "12601": window.URBAN_PLAN_EXPLANATIONS_2020_1_2 || {},
-};
->>>>>>> Stashed changes
 let activeExam = fallbackExam;
 let writtenQuestions = buildWrittenQuestions(activeExam);
 
 function buildWrittenQuestions(exam) {
-<<<<<<< Updated upstream
   return exam.questions.map((question, index) => {
     const generatedExplanation = createQuestionExplanation(question, exam);
-    const topicReview = getSharedTopicReview(question);
+    const topicReview = question.topicReview || getSharedTopicReview(question);
+    const inlineEnhancement = question.explanation
+      ? {
+          explanation: question.explanation,
+          takeaway: question.takeaway,
+          explanationKind: question.explanationKind || "detailed",
+          sourceWarning: Boolean(question.sourceWarning),
+          historicalLaw: Boolean(question.historicalLaw),
+        }
+      : null;
     const ownEnhancement =
       exam.id === "15428" ? examEnhancements[String(question.number || index + 1)] || null : null;
     const authoredEnhancement =
       detailedExamEnhancements[String(exam.id)]?.[String(question.number || index + 1)] || null;
     const reusedEnhancement =
       exam.id === "15428" ? null : expandedExplanationByFingerprint.get(getExplanationFingerprint(question));
-    const enhancement = ownEnhancement
+    const enhancement = inlineEnhancement
+      ? { ...generatedExplanation, ...inlineEnhancement }
+      : ownEnhancement
       ? { ...generatedExplanation, ...ownEnhancement, explanationKind: "expanded" }
       : authoredEnhancement
         ? {
@@ -556,11 +578,6 @@ function buildWrittenQuestions(exam) {
         : reusedEnhancement
           ? { ...generatedExplanation, ...reusedEnhancement }
           : generatedExplanation;
-=======
-  const examEnhancements = examEnhancementsByExam[String(exam.id)] || {};
-  return exam.questions.map((question, index) => {
-    const enhancement = examEnhancements[String(question.number || index + 1)] || {};
->>>>>>> Stashed changes
     const accuracy = Number.isFinite(question.accuracy) ? question.accuracy : 65;
     const level = accuracy >= 75 ? "쉬움" : accuracy >= 55 ? "보통" : "어려움";
     const finalOptions = enhancement.options || question.options;
@@ -591,6 +608,10 @@ function buildWrittenQuestions(exam) {
 function activateExam(examId) {
   activeExam = examArchive[String(examId)] || examArchive[examCatalog[0]?.id] || fallbackExam;
   writtenQuestions = buildWrittenQuestions(activeExam);
+}
+
+function getActiveExamDurationSeconds() {
+  return Math.max(1, Number(activeExam.durationMinutes) || 150) * 60;
 }
 
 const practicalLessons = [
@@ -1035,8 +1056,8 @@ function renderDashboard() {
       <section class="hero-grid">
         <div class="surface padded hero-copy">
           <span class="eyebrow">합격 흐름 설계</span>
-          <h2>59개 회차를 실전처럼 풀고, 정답까지 바로 확인하는 학습실</h2>
-          <p>COMCBT 도시계획기사 자료의 2003년부터 2022년까지 59개 회차를 회차 선택형 CBT로 구성했습니다. 전체 5,900문항마다 정답 근거와 핵심 개념을 독립적으로 작성하고, 계산·법규·오답 구별이 필요한 부분을 문항별로 풀어 설명했습니다.</p>
+          <h2>59개 공개 기출과 2022년 4회 보강문제를 실전처럼 푸는 학습실</h2>
+          <p>COMCBT 도시계획기사 자료의 2003년부터 2022년까지 59개 회차와 공유 대화에서 정리한 2022년 4회 보강문제를 회차 선택형 CBT로 구성했습니다. 정답 근거와 핵심 개념을 독립적으로 작성하고, 계산·법규·오답 구별이 필요한 부분을 문항별로 풀어 설명했습니다.</p>
           <div class="hero-meta">
             <div class="metric">
               <span>필기 구조</span>
@@ -1372,6 +1393,9 @@ function renderCbtQuiz() {
   const remaining = getTimerRemainingSeconds();
   const answeredPercent = Math.round((totalStats.answered / writtenQuestions.length) * 100);
   const archiveCount = examCatalog.length || 59;
+  const examSubjects = subjects.filter((subject) =>
+    writtenQuestions.some((question) => question.subject === subject.id),
+  );
   const currentBookmarks = writtenQuestions.filter((item) => state.bookmarks.includes(item.id)).length;
   const isCompactLayout = compactViewport;
   const examYear = String(activeExam.date || activeExam.title || "출제 당시").match(/\d{4}/)?.[0] || "출제 당시";
@@ -1391,14 +1415,14 @@ function renderCbtQuiz() {
                   .join("")}
               </select>
             </label>
-            <a href="${activeExam.sourceArticleUrl || activeExam.sourceIndexUrl || "https://www.comcbt.com/xe/dy"}" target="_blank" rel="noreferrer">COMCBT 회차 원문 ↗</a>
+            <a href="${activeExam.sourceArticleUrl || activeExam.sourceIndexUrl || "https://www.comcbt.com/xe/dy"}" target="_blank" rel="noreferrer">${escapeHtml(activeExam.sourceSiteLabel || "COMCBT")} 자료 ↗</a>
           </div>
-          <span class="eyebrow">${escapeHtml(activeExam.date || "2022-03-05")} · 실제 기출</span>
+          <span class="eyebrow">${escapeHtml(activeExam.date || "2022-03-05")} · ${activeExam.isSupplemental ? "기출 연계 보강" : "실제 기출"}</span>
           <h2>${escapeHtml(activeExam.title)}</h2>
           <p>한 화면에 한 문제씩 풀고, 미풀이·오답·북마크 상태를 바로 확인하세요. 모든 문항에 원 사이트 이용자 해설을 옮기지 않고 이 학습실에서 독립 작성한 정답 근거·오답 구별·공식과 법규 기준을 담은 상세해설과 한 줄 암기를 연결했습니다.</p>
           <div class="exam-facts" aria-label="시험 정보">
             <span><strong>${writtenQuestions.length}</strong>문항</span>
-            <span><strong>${subjects.length}</strong>과목</span>
+            <span><strong>${examSubjects.length}</strong>과목</span>
             <span><strong>${activeExam.durationMinutes || 150}</strong>분</span>
             <span>해설 <strong>${writtenQuestions.length}</strong>개</span>
             <span>출처 목록 <strong>${archiveCount}</strong>회</span>
@@ -1409,7 +1433,7 @@ function renderCbtQuiz() {
           <strong class="timer-display" id="examTimer" aria-live="polite">${formatTimer(remaining)}</strong>
           <div class="button-row compact-buttons">
             <button class="secondary-button" id="timerToggle" type="button" ${remaining <= 0 || state.examSubmitted ? "disabled" : ""}>
-              ${state.timerEnd ? "일시정지" : remaining === EXAM_DURATION_SECONDS ? "타이머 시작" : "계속"}
+              ${state.timerEnd ? "일시정지" : remaining === getActiveExamDurationSeconds() ? "타이머 시작" : "계속"}
             </button>
             <button class="ghost-button" id="timerReset" type="button" ${state.examSubmitted ? "disabled" : ""}>시간 초기화</button>
           </div>
@@ -1423,8 +1447,8 @@ function renderCbtQuiz() {
         <div>
           <span class="eyebrow">과목 바로가기</span>
           <div class="button-row filter-row" aria-label="과목 필터">
-            <button class="chip-button ${state.quizSubject === "all" ? "is-selected" : ""}" data-filter="all" type="button">전체 100</button>
-            ${subjects
+            <button class="chip-button ${state.quizSubject === "all" ? "is-selected" : ""}" data-filter="all" type="button">전체 ${writtenQuestions.length}</button>
+            ${examSubjects
               .map(
                 (subject) => `
                   <button class="chip-button ${state.quizSubject === subject.id ? "is-selected" : ""}" data-filter="${subject.id}" type="button">${subject.title}</button>
@@ -1523,8 +1547,8 @@ function renderCbtQuiz() {
             }
             ${question.historicalLaw ? `<p class="law-note">이 법규 관련 문항은 ${examYear}년 출제 당시 기준입니다. 현재 조문과 다를 수 있으므로 최신 법령을 함께 확인하세요.</p>` : ""}
             <div class="source-links">
-              <a class="source-link" href="${question.sourceUrl || activeExam.sourceUrl}" target="_blank" rel="noreferrer">COMCBT 원문 문항 확인</a>
-              <a class="source-link" href="${activeExam.sourceArticleUrl || activeExam.sourceIndexUrl || "https://www.comcbt.com/xe/dy"}" target="_blank" rel="noreferrer">회차 자료 페이지 확인</a>
+              <a class="source-link" href="${question.sourceUrl || activeExam.sourceUrl}" target="_blank" rel="noreferrer">${escapeHtml(question.sourceLabel || "COMCBT 원문 문항 확인")}</a>
+              <a class="source-link" href="${activeExam.sourceArticleUrl || activeExam.sourceIndexUrl || "https://www.comcbt.com/xe/dy"}" target="_blank" rel="noreferrer">${escapeHtml(activeExam.sourceArticleLabel || "회차 자료 페이지 확인")}</a>
             </div>
           </section>
 
@@ -1611,7 +1635,7 @@ function bindCbtQuiz() {
     state.quizIndex = 0;
     state.examSubmitted = false;
     state.timerEnd = null;
-    state.timerRemaining = EXAM_DURATION_SECONDS;
+    state.timerRemaining = getActiveExamDurationSeconds();
     saveState();
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1688,7 +1712,7 @@ function bindCbtQuiz() {
     state.quizSubject = "all";
     state.quizIndex = 0;
     state.timerEnd = null;
-    state.timerRemaining = EXAM_DURATION_SECONDS;
+    state.timerRemaining = getActiveExamDurationSeconds();
     saveState();
     render();
   });
@@ -1707,7 +1731,7 @@ function bindCbtQuiz() {
 
   app.querySelector("#timerReset")?.addEventListener("click", () => {
     state.timerEnd = null;
-    state.timerRemaining = EXAM_DURATION_SECONDS;
+    state.timerRemaining = getActiveExamDurationSeconds();
     saveState();
     render();
   });
@@ -1788,16 +1812,18 @@ function renderOptionImages(question, optionIndex) {
 }
 
 function getExamResult() {
-  const subjectResults = subjects.map((subject) => {
-    const questions = writtenQuestions.filter((question) => question.subject === subject.id);
-    const stats = getQuizStats(questions);
-    return {
-      ...stats,
-      id: subject.id,
-      title: subject.title,
-      score: Math.round((stats.correct / questions.length) * 100),
-    };
-  });
+  const subjectResults = subjects
+    .filter((subject) => writtenQuestions.some((question) => question.subject === subject.id))
+    .map((subject) => {
+      const questions = writtenQuestions.filter((question) => question.subject === subject.id);
+      const stats = getQuizStats(questions);
+      return {
+        ...stats,
+        id: subject.id,
+        title: subject.title,
+        score: Math.round((stats.correct / questions.length) * 100),
+      };
+    });
   const totalStats = getQuizStats(writtenQuestions);
   const score = Math.round((totalStats.correct / writtenQuestions.length) * 100);
   return {
@@ -1846,7 +1872,7 @@ function getTimerRemainingSeconds() {
   if (state.timerEnd) {
     return Math.max(0, Math.ceil((Number(state.timerEnd) - Date.now()) / 1000));
   }
-  return Number.isFinite(state.timerRemaining) ? state.timerRemaining : EXAM_DURATION_SECONDS;
+  return Number.isFinite(state.timerRemaining) ? state.timerRemaining : getActiveExamDurationSeconds();
 }
 
 function pauseQuizTimer() {
