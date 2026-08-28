@@ -9,9 +9,13 @@ const scriptPaths = [
   "data/exam-archive.js",
   "data/exam-2022-1.js",
   "data/exam-explanations-2022-1.js",
+<<<<<<< Updated upstream
   "data/exam-detailed-explanations.js",
   "data/shared-topic-reviews.js",
   "data/explanation-engine.js",
+=======
+  "data/exam-explanations-2020-1-2.js",
+>>>>>>> Stashed changes
   "app.js",
 ];
 

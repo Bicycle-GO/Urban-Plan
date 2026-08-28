@@ -447,6 +447,7 @@ const fallbackExam = window.URBAN_PLAN_EXAM_2022_1 || {
 };
 const examCatalog = window.URBAN_PLAN_EXAM_CATALOG || [];
 const examArchive = window.URBAN_PLAN_EXAM_ARCHIVE || { [fallbackExam.id]: fallbackExam };
+<<<<<<< Updated upstream
 const examEnhancements = window.URBAN_PLAN_EXPLANATIONS_2022_1 || {};
 const detailedExamEnhancements = window.URBAN_PLAN_DETAILED_EXPLANATIONS || {};
 const sharedTopicReviewData = window.URBAN_PLAN_SHARED_TOPIC_REVIEWS || { topics: {}, rules: [] };
@@ -523,10 +524,17 @@ for (const [index, question] of (fallbackExam.questions || []).entries()) {
   });
 }
 
+=======
+const examEnhancementsByExam = {
+  "15428": window.URBAN_PLAN_EXPLANATIONS_2022_1 || {},
+  "12601": window.URBAN_PLAN_EXPLANATIONS_2020_1_2 || {},
+};
+>>>>>>> Stashed changes
 let activeExam = fallbackExam;
 let writtenQuestions = buildWrittenQuestions(activeExam);
 
 function buildWrittenQuestions(exam) {
+<<<<<<< Updated upstream
   return exam.questions.map((question, index) => {
     const generatedExplanation = createQuestionExplanation(question, exam);
     const topicReview = getSharedTopicReview(question);
@@ -548,6 +556,11 @@ function buildWrittenQuestions(exam) {
         : reusedEnhancement
           ? { ...generatedExplanation, ...reusedEnhancement }
           : generatedExplanation;
+=======
+  const examEnhancements = examEnhancementsByExam[String(exam.id)] || {};
+  return exam.questions.map((question, index) => {
+    const enhancement = examEnhancements[String(question.number || index + 1)] || {};
+>>>>>>> Stashed changes
     const accuracy = Number.isFinite(question.accuracy) ? question.accuracy : 65;
     const level = accuracy >= 75 ? "쉬움" : accuracy >= 55 ? "보통" : "어려움";
     const finalOptions = enhancement.options || question.options;
