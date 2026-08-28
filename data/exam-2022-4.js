@@ -23,6 +23,12 @@ const urbanPlan2022FourReviews = {
       "방사형은 중심의 기념건축물이나 광장에서 간선도로가 퍼져 중심성이 강하지만 도심 교통이 집중됩니다. 격자형은 평탄지에서 토지분할과 단계개발이 쉽지만 도로 위계가 약하고 통과교통이 생기기 쉽습니다. 혼합형은 지형과 토지이용 제약에 맞춰 여러 형식을 결합하며, 선형은 철도·간선도로·해안 같은 축을 따라 길게 발달합니다.",
     memory: "방사=중심, 격자=평탄·분할, 혼합=제약 대응, 선형=축을 따라 성장",
   },
+  parkDistances: {
+    title: "생활권공원의 유치거리",
+    summary:
+      "도시공원 배치기준에서 어린이공원은 250m 이하, 근린생활권 근린공원은 500m 이하, 도보권 근린공원은 1,000m 이하입니다. 도보권 근린공원은 유치거리뿐 아니라 규모도 30,000㎡ 이상이라는 점을 함께 기억하면 법규형 문항을 구별하기 쉽습니다.",
+    memory: "어린이 250m → 근린생활권 500m → 도보권 1,000m",
+  },
 };
 
 window.URBAN_PLAN_EXAM_2022_4 = {
@@ -31,7 +37,7 @@ window.URBAN_PLAN_EXAM_2022_4 = {
   date: "2022-10",
   round: "4회 핵심 보강",
   durationMinutes: 30,
-  questionCount: 12,
+  questionCount: 13,
   subjectCount: 3,
   isSupplemental: true,
   sourceSiteLabel: "공유 대화",
@@ -287,6 +293,27 @@ window.URBAN_PLAN_EXAM_2022_4 = {
         "혼합형은 산지·수계 같은 지형조건과 기존 시가지·토지이용의 제약에 맞추기 위해 격자형, 방사형, 선형 등을 결합한 형태이므로 3번이 옳습니다. 1번과 4번은 방사형의 설명이며, 2번은 격자형의 대표적인 장점입니다.",
       takeaway: "중심은 방사, 평탄·분할은 격자, 제약 대응은 혼합, 축 성장은 선형",
       topicReview: urbanPlan2022FourReviews.streetNetworks,
+    },
+    {
+      id: "2022-4-review-q031",
+      number: 31,
+      subject: "design",
+      subjectLabel: "도시설계 및 단지계획",
+      question:
+        "도시공원 중 주로 도보권 안에 거주하는 자의 이용에 제공할 것을 목적으로 하는 도보권 근린공원의 유치거리 기준으로 옳은 것은?",
+      options: ["250m 이하", "500m 이하", "1,000m 이하", "1,500m 이하"],
+      optionImageUrls: [[], [], [], []],
+      questionImageUrls: [],
+      answer: 2,
+      accuracy: 72,
+      historicalLaw: true,
+      sourceUrl:
+        "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110201&flSeq=138628211&gubun=",
+      sourceLabel: "국가법령정보센터 별표 3 확인",
+      explanation:
+        "정답은 3번, 1,000m 이하입니다. 「도시공원 및 녹지 등에 관한 법률 시행규칙」 별표 3의 도시공원 설치 및 규모 기준에서 도보권 근린공원은 주로 도보권 안에 거주하는 사람의 이용을 목적으로 하며 유치거리를 1,000m 이하로 정합니다. 함께 비교하면 어린이공원은 250m 이하, 근린생활권 근린공원은 500m 이하이고, 1,500m 이하는 해당 기준이 아닙니다. 또한 도보권 근린공원의 규모는 30,000㎡ 이상이므로 거리 1,000m와 면적 30,000㎡를 한 묶음으로 기억하면 좋습니다.",
+      takeaway: "도보권 근린공원 = 유치거리 1,000m 이하 · 규모 30,000㎡ 이상",
+      topicReview: urbanPlan2022FourReviews.parkDistances,
     },
   ],
 };
